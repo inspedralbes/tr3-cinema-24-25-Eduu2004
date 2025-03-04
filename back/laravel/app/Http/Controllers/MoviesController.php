@@ -6,8 +6,7 @@ use Illuminate\Http\Request;
 
 class MoviesController extends Controller
 {
-    public function index()
-    {
+    public function index() {
         $movies = Movies::all();
         return view('movies.index', compact('movies'));
     }
@@ -17,19 +16,34 @@ class MoviesController extends Controller
         return view('movies.create');
     }
 
-    public function store(Request $request)
-    {
-        Movies::create($request->all());
-        return redirect()->route('movies.index');
+    public function store(Request $request) {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'plot' => 'nullable|string',
+            'runtime' => 'nullable|integer',
+            'genre' => 'nullable|string|max:100',
+            'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+    
+        $movie = new Movies($request->except('poster'));
+    
+        if ($request->hasFile('poster')) {
+            $posterPath = $request->file('poster')->store('posters', 'public');
+            $movie->poster = $posterPath;
+        }
+    
+        $movie->save();
+    
+        return redirect()->route('movies.index')->with('success', 'Película agregada con éxito.');
     }
+    
 
     public function show(Movies $movie)
     {
         return view('movies.show', compact('movie'));
     }
 
-    public function edit(Movies $movie)
-    {
+    public function edit(Movies $movie) {
         return view('movies.edit', compact('movie'));
     }
 

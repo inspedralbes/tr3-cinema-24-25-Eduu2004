@@ -2,33 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Seat;
+use App\Models\Seats;
 use Illuminate\Http\Request;
 
 class SeatsController extends Controller
 {
     public function index()
     {
-        return Seat::all();
+        return Seats::all();
     }
 
     public function store(Request $request)
     {
-        return Seat::create($request->all());
+        return Seats::create($request->all());
     }
 
-    public function show(Seat $seat)
+    public function show(Seats $seat)
     {
         return $seat;
     }
 
-    public function update(Request $request, Seat $seat)
+    public function update(Request $request, Seats $seat)
     {
         $seat->update($request->all());
         return $seat;
     }
 
-    public function destroy(Seat $seat)
+    public function destroy(Seats $seat)
     {
         $seat->delete();
         return response()->noContent();

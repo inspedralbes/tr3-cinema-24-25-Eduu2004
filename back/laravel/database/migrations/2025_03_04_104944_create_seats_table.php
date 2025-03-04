@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('seats', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('session')->constrained('sessions')->onDelete('cascade');
-            $table->string('row', 1); 
-            $table->integer('number'); 
-            $table->enum('type', ['Normal', 'VIP']); 
-            $table->enum('status', ['Disponible', 'Ocupada']); 
+            $table->foreignId('session_id')->constrained('film_sessions')->onDelete('cascade'); // Clave foránea corregida
+            $table->string('row', 1);
+            $table->integer('number');
+            $table->enum('type', ['Normal', 'VIP']);
+            $table->enum('status', ['Disponible', 'Ocupada']);
             $table->timestamps();
+
             $table->unique(['session_id', 'row', 'number']);
         });
     }

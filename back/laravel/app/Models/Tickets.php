@@ -18,6 +18,6 @@ class Tickets extends Model
 
     public function seat()
     {
-        return $this->belongsTo(Seat::class);
+        return $this->belongsTo(Seats::class);
     }
 }

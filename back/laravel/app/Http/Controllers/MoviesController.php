@@ -1,14 +1,14 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Movie;
+use App\Models\Movies;
 use Illuminate\Http\Request;
 
 class MoviesController extends Controller
 {
     public function index()
     {
-        $movies = Movie::all();
+        $movies = Movies::all();
         return view('movies.index', compact('movies'));
     }
 
@@ -19,27 +19,27 @@ class MoviesController extends Controller
 
     public function store(Request $request)
     {
-        Movie::create($request->all());
+        Movies::create($request->all());
         return redirect()->route('movies.index');
     }
 
-    public function show(Movie $movie)
+    public function show(Movies $movie)
     {
         return view('movies.show', compact('movie'));
     }
 
-    public function edit(Movie $movie)
+    public function edit(Movies $movie)
     {
         return view('movies.edit', compact('movie'));
     }
 
-    public function update(Request $request, Movie $movie)
+    public function update(Request $request, Movies $movie)
     {
         $movie->update($request->all());
         return redirect()->route('movies.index');
     }
 
-    public function destroy(Movie $movie)
+    public function destroy(Movies $movie)
     {
         $movie->delete();
         return redirect()->route('movies.index');

@@ -1,12 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MovieController;
-use App\Http\Controllers\SessionController;
-use App\Http\Controllers\TicketController;
-use App\Http\Controllers\SeatController;
+use App\Http\Controllers\MoviesController;
+use App\Http\Controllers\filmSessionsController;
+use App\Http\Controllers\TicketsController;
+use App\Http\Controllers\SeatsController;
 
-Route::resource('movies', MovieController::class);
-Route::resource('sessions', SessionController::class);
-Route::resource('tickets', TicketController::class);
-Route::resource('seats', SeatController::class);
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::resource('movies', MoviesController::class);
+Route::resource('sessions', filmSessionsController::class);
+Route::resource('tickets', TicketsController::class);
+Route::resource('seats', SeatsController::class);

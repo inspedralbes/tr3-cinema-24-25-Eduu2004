@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sessions', function (Blueprint $table) {
+        Schema::disableForeignKeyConstraints(); // Deshabilita restricciones temporales
+        Schema::create('film_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('movie_id')->constrained()->onDelete('cascade');
             $table->date('date');
@@ -19,7 +20,6 @@ return new class extends Migration
             $table->boolean('vip_enabled');
             $table->boolean('is_discount_day')->default(false);
             $table->timestamps();
-            
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('film_sessions');
     }
 };

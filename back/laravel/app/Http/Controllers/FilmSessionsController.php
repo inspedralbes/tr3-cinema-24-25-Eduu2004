@@ -2,33 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Session;
+use App\Models\filmSessions;
 use Illuminate\Http\Request;
 
-class SessionsController extends Controller
+class FilmSessionsController extends Controller
 {
     public function index()
     {
-        return Session::all();
+        return filmSessions::all();
     }
 
     public function store(Request $request)
     {
-        return Session::create($request->all());
+        return filmSessions::create($request->all());
     }
 
-    public function show(Session $session)
+    public function show(filmSessions $session)
     {
         return $session;
     }
 
-    public function update(Request $request, Session $session)
+    public function update(Request $request, filmSessions $session)
     {
         $session->update($request->all());
         return $session;
     }
 
-    public function destroy(Session $session)
+    public function destroy(filmSessions $session)
     {
         $session->delete();
         return response()->noContent();

@@ -11,7 +11,7 @@
         @method('PUT')
 
         <div class="mb-3">
-            <label for="title" class="form-label">Título:</label>
+            <label for="title" class="form-label">Títol:</label>
             <input type="text" class="form-control" name="title" id="title" value="{{ old('title', $movie->title) }}" required>
         </div>
 
@@ -21,12 +21,12 @@
         </div>
 
         <div class="mb-3">
-            <label for="runtime" class="form-label">Duración (minutos):</label>
+            <label for="runtime" class="form-label">Duració (minuts):</label>
             <input type="number" class="form-control" name="runtime" id="runtime" value="{{ old('runtime', $movie->runtime) }}">
         </div>
 
         <div class="mb-3">
-            <label for="genre" class="form-label">Género:</label>
+            <label for="genre" class="form-label">Gènere:</label>
             <input type="text" class="form-control" name="genre" id="genre" value="{{ old('genre', $movie->genre) }}">
         </div>
 
@@ -38,20 +38,10 @@
                     <img src="{{ asset('storage/' . $movie->poster) }}" alt="Poster" width="100">
                 </div>
             @endif
-        </div>
+        </div><br>
 
-        <div class="mb-3">
-            <label for="created_at" class="form-label">Creado el:</label>
-            <input type="text" class="form-control" value="{{ $movie->created_at->format('d/m/Y H:i') }}" disabled>
-        </div>
-
-        <div class="mb-3">
-            <label for="updated_at" class="form-label">Última actualización:</label>
-            <input type="text" class="form-control" value="{{ $movie->updated_at->format('d/m/Y H:i') }}" disabled>
-        </div>
-
-        <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
-        <a href="{{ route('movies.index') }}" class="btn btn-secondary">🔙 Volver</a>
-    </form>
-</div>
+        <button type="submit" class="btn btn-primary">Guardar Canvis</button>
+        <a href="{{ route('movies.index') }}" class="btn btn-secondary">Tornar</a>
+    </form><br><br>
+</div>  
 @endsection

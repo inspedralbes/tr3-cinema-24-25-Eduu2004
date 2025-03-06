@@ -4,20 +4,20 @@
 
 @section('content')
 <div class="container">
-    <h1 class="mb-4 text-center">Lista de Películas</h1>
+    <h1 class="mb-4 text-center">Llistat de Pel·lícules</h1>
     
-    <a href="{{ route('movies.create') }}" class="btn btn-success mb-3">➕ Agregar Película</a>
+    <a href="{{ route('movies.create') }}" class="btn btn-success mb-3">Afegir Pel·lícules</a>
 
     <table class="table table-striped">
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
-                <th>Título</th>
+                <th>Títol</th>
                 <th>Sinopsis</th>
-                <th>Duración (min)</th>
-                <th>Género</th>
+                <th>Duració (min)</th>
+                <th>Gènere</th>
                 <th>Poster</th>
-                <th>Acciones</th>
+                <th>Accions</th>
             </tr>
         </thead>
         <tbody>
@@ -36,11 +36,11 @@
                     @endif
                 </td>
                 <td>
-                    <a href="{{ route('movies.edit', $movie->id) }}" class="btn btn-warning btn-sm">✏️ Editar</a>
+                    <a href="{{ route('movies.edit', $movie->id) }}" class="btn btn-warning btn-sm">Editar</a>
                     <form action="{{ route('movies.destroy', $movie->id) }}" method="POST" style="display:inline-block;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta película?')">🗑️ Borrar</button>
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta película?')">Eliminar</button>
                     </form>
                 </td>
             </tr>

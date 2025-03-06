@@ -13,6 +13,6 @@ class Movies extends Model
 
     public function sessions()
     {
-        return $this->hasMany(Session::class);
+        return $this->hasMany(filmSessions::class);
     }
 }

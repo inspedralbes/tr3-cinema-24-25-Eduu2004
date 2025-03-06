@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::disableForeignKeyConstraints(); // Deshabilita restricciones temporales
+        Schema::disableForeignKeyConstraints(); 
         Schema::create('film_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('movie_id')->constrained()->onDelete('cascade');

@@ -50,7 +50,7 @@ class FilmSessionsController extends Controller
         $validated = $request->validate([
             'movie_id' => 'required|exists:movies,id',
             'date' => 'required|date',
-            'time' => 'required|date_format:H:i',
+            'time' => 'required|date_format:H:i:s',
             'vip_enabled' => 'required|boolean',
             'is_discount_day' => 'required|boolean',
         ]);

@@ -25,15 +25,41 @@ class TicketsController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id'    => 'required|exists:users,id',
             'session_id' => 'required|exists:film_sessions,id',
-            'seat_id' => 'required|exists:seats,id',
-            'price' => 'required|numeric',
+            'seat_id'    => 'required|exists:seats,id',
+            'price'      => 'required|numeric',
+            // Opcional: 'is_discount_day' si vols tenir-ho en compte per calcular el preu
         ]);
 
-        Tickets::create($validated);
+        // Comprovar si l'usuari ja té una entrada per aquesta sessió
+        $existingTicket = Tickets::where('user_id', $validated['user_id'])
+            ->where('session_id', $validated['session_id'])
+            ->first();
+        if ($existingTicket) {
+            return redirect()->back()->with('error', 'Ja tens entrades per aquesta sessió.');
+        }
 
-        return redirect()->route('tickets.index')->with('success', 'Ticket creado correctamente!');
+        // Verificar que la butaca estigui disponible (suposant que l'estat 'lliure' indica disponibilitat)
+        $seat = Seats::find($validated['seat_id']);
+        if (!$seat || $seat->status !== 'lliure') {
+            return redirect()->back()->with('error', 'La butaca no està disponible.');
+        }
+
+        // (Opcional) Calcular el preu en funció del tipus de butaca i si és dia de descompte.
+        // Per exemple:
+        // if($seat->type === 'VIP'){
+        //     $validated['price'] = $request->input('is_discount_day') ? 6 : 8;
+        // } else {
+        //     $validated['price'] = $request->input('is_discount_day') ? 4 : 6;
+        // }
+
+        // Crear el ticket
+        $ticket = Tickets::create($validated);
+
+        $seat->update(['status' => 'ocupat']);
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket creat correctament!');
     }
 
     public function show(Tickets $ticket)
@@ -51,20 +77,20 @@ class TicketsController extends Controller
     public function update(Request $request, Tickets $ticket)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id'    => 'required|exists:users,id',
             'session_id' => 'required|exists:film_sessions,id',
-            'seat_id' => 'required|exists:seats,id',
-            'price' => 'required|numeric',
+            'seat_id'    => 'required|exists:seats,id',
+            'price'      => 'required|numeric',
         ]);
 
         $ticket->update($validated);
 
-        return redirect()->route('tickets.index')->with('success', 'Ticket actualizado correctamente!');
+        return redirect()->route('tickets.index')->with('success', 'Ticket actualitzat correctament!');
     }
 
     public function destroy(Tickets $ticket)
     {
         $ticket->delete();
-        return redirect()->route('tickets.index')->with('success', 'Ticket eliminado correctamente!');
+        return redirect()->route('tickets.index')->with('success', 'Ticket eliminat correctament!');
     }
 }

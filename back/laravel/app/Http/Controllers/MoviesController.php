@@ -6,10 +6,21 @@ use Illuminate\Http\Request;
 
 class MoviesController extends Controller
 {
-    public function index() {
+
+    public function index(Request $request) {
+        if ($request->is('api/*')) {
+            $movies = Movies::all();
+
+            return response()->json([
+                'message' => 'Películas obtenidas con éxito',
+                'movies' => $movies,
+            ], 200);
+        }
+
         $movies = Movies::all();
         return view('movies.index', compact('movies'));
     }
+
 
     public function create()
     {

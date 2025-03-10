@@ -20,6 +20,7 @@ Route::get('/movies', [MoviesController::class, 'index']); // Obtener todas las 
 Route::get('/movies/{id}', [MoviesController::class, 'show']); // Obtener una película por ID
 Route::post('/movies', [MoviesController::class, 'store']); // Agregar una película
 Route::put('/movies/{id}', [MoviesController::class, 'update']); // Actualizar una película
+Route::get('/movies/{id}', [MoviesController::class, 'show']);
 Route::delete('/movies/{id}', [MoviesController::class, 'destroy']); // Eliminar una película
 
 // Rutas de asientos

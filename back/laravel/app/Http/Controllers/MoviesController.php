@@ -49,8 +49,26 @@ class MoviesController extends Controller
     }
     
 
-    public function show(Movies $movie)
+    public function show(Request $request, $id)
     {
+        // Verificar si la solicitud es desde una API
+        if ($request->is('api/*')) {
+            // Buscar la película por ID
+            $movie = Movies::find($id);
+
+            // Verificar si la película existe
+            if (!$movie) {
+                return response()->json(['message' => 'Película no encontrada'], 404);
+            }
+
+            // Devolver la película en formato JSON
+            return response()->json([
+                'movie' => $movie
+            ]);
+        }
+
+        // Si no es una solicitud API, devolver una vista
+        $movie = Movies::find($id);
         return view('movies.show', compact('movie'));
     }
 

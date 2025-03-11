@@ -33,10 +33,8 @@ onMounted(async () => {
     const data = await moviesRes.json()
     movies.value = data.movies || []
 
-    // Obtener películas aleatorias para el slider
     recommendedMovies.value = getRandomMovies(movies.value, 5)
 
-    // Cambiar película recomendada cada 2 segundos
     setInterval(() => {
       currentIndex.value = (currentIndex.value + 1) % recommendedMovies.value.length
     }, 2000)

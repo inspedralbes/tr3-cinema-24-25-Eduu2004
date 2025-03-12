@@ -30,7 +30,7 @@
                 <td>{{ $movie->genre }}</td>
                 <td>
                     @if($movie->poster)
-                        <img src="{{ asset('storage/' . $movie->poster) }}" alt="Poster" width="50">
+                        <img src="{{ $movie->poster }}" alt="Poster" width="50">
                     @else
                         No disponible
                     @endif

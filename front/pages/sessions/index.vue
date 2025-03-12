@@ -5,7 +5,7 @@
       <div v-for="session in sessions" :key="session.id" class="session-card p-4 bg-gray-100 rounded-lg shadow">
         <h3 class="text-xl font-semibold">{{ session.movie ? session.movie.title : 'Movie not available' }}</h3>
         <p class="text-gray-600">{{ session.date }} - {{ session.time }}</p>
-        <NuxtLink :to="`/session/${session.id}`" class="text-blue-500">Comprar entrades</NuxtLink>
+        <NuxtLink :to="`/sessions/${session.id}`" class="text-blue-500">Comprar entrades</NuxtLink>
       </div>
     </div>
   </div>

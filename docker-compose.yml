@@ -33,8 +33,8 @@ services:
     depends_on:
       - db
     #Quan es crea, es poden executar ordres
-    command: bash -c "composer install && php artisan key:generate && php artisan migrate --seed && php artisan serve --host=0.0.0.0"
-
+    command: bash -c "composer install && php artisan key:generate && php artisan migrate --seed && php artisan db:seed --class=MoviesSeeder && php artisan serve --host=0.0.0.0"
+  
   # Servicio de Nuxt.js
   nuxt:
     build:

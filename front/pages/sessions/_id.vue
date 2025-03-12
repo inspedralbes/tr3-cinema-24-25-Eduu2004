@@ -3,10 +3,8 @@
       <h1>{{ session.movie.title }}</h1>
       <p>{{ session.movie.plot }}</p>
   
-      <!-- Mapa de butaques -->
       <SeatMap :seats="seats" @update-selection="updateSelection" />
   
-      <!-- Formulari de compra -->
       <div class="purchase-form">
         <h3>Compra d'Entrades</h3>
         <form @submit.prevent="confirmPurchase">

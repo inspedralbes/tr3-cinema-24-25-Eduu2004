@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('session_id')->constrained('film_sessions')->onDelete('cascade');
-            $table->foreignId('seat_id')->constrained()->onDelete('cascade');
+            $table->json('seats'); 
             $table->integer('price');
             $table->timestamps();
-            
         });
+        
     }
 
     /**

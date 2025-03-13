@@ -13,7 +13,7 @@ class filmSessions extends Model
 
     public function movie()
     {
-        return $this->belongsTo(Movies::class);
+        return $this->belongsTo(Movies::class, 'movie_id');
     }
 
     public function seats()

@@ -27,12 +27,12 @@ class TicketsController extends Controller
         $validated = $request->validate([
             'user_id'    => 'required|exists:users,id',
             'session_id' => 'required|exists:film_sessions,id',
-            'seat_id'    => 'required|exists:seats,id',
+            'seats'      => 'required|array|min:1|max:10', // Máximo 10 asientos
             'price'      => 'required|numeric',
-            // Opcional: 'is_discount_day' si vols tenir-ho en compte per calcular el preu
+            // Puedes agregar validaciones adicionales si es necesario.
         ]);
 
-        // Comprovar si l'usuari ja té una entrada per aquesta sessió
+        // Verificar si el usuario ya tiene entradas para esta sesión
         $existingTicket = Tickets::where('user_id', $validated['user_id'])
             ->where('session_id', $validated['session_id'])
             ->first();
@@ -40,27 +40,28 @@ class TicketsController extends Controller
             return redirect()->back()->with('error', 'Ja tens entrades per aquesta sessió.');
         }
 
-        // Verificar que la butaca estigui disponible (suposant que l'estat 'lliure' indica disponibilitat)
-        $seat = Seats::find($validated['seat_id']);
-        if (!$seat || $seat->status !== 'lliure') {
-            return redirect()->back()->with('error', 'La butaca no està disponible.');
-        }
+        // (Opcional) Validar que cada asiento esté disponible
+        // Por ejemplo, podrías iterar sobre $validated['seats'] y verificar el estado en la tabla Seats.
 
-        // (Opcional) Calcular el preu en funció del tipus de butaca i si és dia de descompte.
-        // Per exemple:
-        // if($seat->type === 'VIP'){
-        //     $validated['price'] = $request->input('is_discount_day') ? 6 : 8;
-        // } else {
-        //     $validated['price'] = $request->input('is_discount_day') ? 4 : 6;
+        // Guardar el ticket con los asientos en formato JSON
+        $ticket = Tickets::create([
+            'user_id'    => $validated['user_id'],
+            'session_id' => $validated['session_id'],
+            'seats'      => json_encode($validated['seats']),
+            'price'      => $validated['price']
+        ]);
+
+        // Aquí, si lo deseas, podrías actualizar el estado de cada asiento a "ocupat" en la tabla Seats.
+        // foreach ($validated['seats'] as $seatIdentifier) {
+        //     $seat = Seats::where('identifier', $seatIdentifier)->first();
+        //     if ($seat) {
+        //         $seat->update(['status' => 'ocupat']);
+        //     }
         // }
-
-        // Crear el ticket
-        $ticket = Tickets::create($validated);
-
-        $seat->update(['status' => 'ocupat']);
 
         return redirect()->route('tickets.index')->with('success', 'Ticket creat correctament!');
     }
+
 
     public function show(Tickets $ticket)
     {

@@ -54,8 +54,27 @@ class FilmSessionsController extends Controller
         return redirect()->route('sessions.index')->with('success', 'Sessió creada correctament!');
     }
 
-    public function show(filmSessions $session)
+    public function show(Request $request, $id)
     {
+        $session = filmSessions::with('movie')->findOrFail($id);
+
+        if ($request->is('api/*')) {
+            return response()->json([
+                'message' => 'Sessió trobada',
+                'data' => [
+                    'session' => $session,
+                    'movie' => [
+                        'id' => $session->movie->id,
+                        'title' => $session->movie->title,
+                        'plot' => $session->movie->plot,
+                        'runtime' => $session->movie->runtime,
+                        'genre' => $session->movie->genre,
+                        'poster' => asset('storage/movies/' . $session->movie->poster), // Asegura la URL de la imagen
+                    ],
+                ]
+            ], 200);
+        }
+
         return view('sessions.show', compact('session'));
     }
 

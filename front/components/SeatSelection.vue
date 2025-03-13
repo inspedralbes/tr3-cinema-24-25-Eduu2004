@@ -1,201 +1,322 @@
 <template>
-  <div>
-    <div class="options">
-      <label>
-        <input type="checkbox" v-model="vipActive" /> Activar VIP (Fila F)
-      </label>
-      <label>
-        <input type="checkbox" v-model="isDiscountDay" /> Dia de l'espectador
-      </label>
-    </div>
-    <div class="seat-grid">
-      <div v-for="row in rows" :key="row" class="seat-row">
-        <div
-          v-for="seat in seatsPerRow"
-          :key="seat"
-          @click="toggleSeat(row, seat)"
-          :class="getSeatClass(row, seat)"
-        >
-          {{ row }}{{ seat }}
+  <div class="cinema">
+    <h3>Mapa de butaques</h3>
+    <ul class="showcase">
+      <li>
+        <div class="seat"></div>
+        <small>Gris: disponibles</small>
+      </li>
+      <li>
+        <div class="seat selected"></div>
+        <small>Verd: seleccionades per l'usuari</small>
+      </li>
+      <li>
+        <div class="seat occupied"></div>
+        <small>Vermell: ocupades</small>
+      </li>    
+    </ul>
+    <p class="map-info">L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).</p>
+
+    <!-- Pati de butaques amb files A–L i 10 butaques per fila -->
+    <div class="pati">
+      <div class="pati-grid">
+        <div class="pati-row" v-for="row in patiRows" :key="row.letter">
+          <div class="row-label">{{ row.letter }}</div>
+          <div class="row-seats">
+            <div 
+              class="seat"
+              v-for="seat in row.seats" 
+              :key="seat.id"
+              :class="{ occupied: seat.status === 'Ocupada', selected: selectedSeats.includes(seat.id) }"
+              @click="toggleSeatSelection(seat)"
+            >
+              {{ seat.number }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="summary">
-      <p>Butacas seleccionades: {{ selectedSeats.join(', ') }}</p>
-      <p>Total: €{{ totalPrice }}</p>
+
+    <p class="text">
+      Has seleccionat <span id="count">{{ selectedSeats.length }}</span> butaques per un preu total de 
+      <span id="total">{{ totalPrice }}</span> €
+    </p>
+
+    <!-- Missatges d'error i d'èxit -->
+    <div v-if="errorMessage" class="text-red-500">{{ errorMessage }}</div>
+    <div v-if="successMessage" class="text-green-500">{{ successMessage }}</div>
+    
+    <!-- Formulari d'usuari -->
+    <div class="user-form">
+      <h3 class="text-lg font-bold mt-6">Dades personals</h3>
+      <input v-model="userData.name" type="text" placeholder="Nom" class="input-field" />
+      <input v-model="userData.surname" type="text" placeholder="Cognom" class="input-field" />
+      <input v-model="userData.phone" type="text" placeholder="Telèfon" class="input-field" />
     </div>
-    <button @click="confirmPurchase" class="buy-button">Comprar entradas</button>
+    
+    <!-- Botons -->
+    <div class="buttons">
+      <button @click="confirmPurchase" class="btn buy">Comprar Entrades</button>
+      <button @click="clearSelection" class="btn clear">Netejar selecció</button>
+      <button @click="logout" class="btn logout">Tancar sessió</button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 
-// Recibimos el ID de la sesión desde la propiedad de entrada
-const props = defineProps({
-  sessionId: {
-    type: String,
-    required: true
-  }
-})
+// Array de files per al pati (A–L) amb 10 butaques per fila
+const rowLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
+const patiRows = rowLetters.map(letter => ({
+  letter,
+  seats: Array.from({ length: 10 }, (_, i) => ({
+    id: `p-${letter}-${i + 1}`,
+    row: letter,
+    number: i + 1,
+    status: 'Disponible' // Tots com a disponibles per defecte
+  }))
+}))
 
-const rows = ref(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'])
-const seatsPerRow = ref(10)
+// Variables reactives per a la selecció
 const selectedSeats = ref([])
-// Asientos ocupados cargados desde Laravel (se espera que el endpoint devuelva un JSON)
-const occupiedSeats = ref([])
 
-// Opciones de preus
-const vipActive = ref(false)
-const isDiscountDay = ref(false)
+// Preu fix: 6€ per butaca
+const totalPrice = computed(() => selectedSeats.value.length * 6)
 
-// Cargar los asientos ocupados desde Laravel
-onMounted(async () => {
-  try {
-    const res = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`)
-    const data = await res.json()
-    // Se espera que Laravel retorne algo como: { "occupiedSeats": ["A1", "B5", ...] }
-    if (data.occupiedSeats) {
-      occupiedSeats.value = data.occupiedSeats
-    }
-  } catch (error) {
-    console.error('Error al cargar asientos ocupados:', error)
-  }
-})
+// Dades d'usuari i missatges
+const userData = ref({ name: '', surname: '', phone: '' })
+const errorMessage = ref('')
+const successMessage = ref('')
 
-function toggleSeat(row, seat) {
-  const seatId = `${row}${seat}`
-  // Si el asiento está ocupado, no se puede seleccionar
-  if (occupiedSeats.value.includes(seatId)) {
-    return
-  }
-  if (selectedSeats.value.includes(seatId)) {
-    selectedSeats.value = selectedSeats.value.filter(s => s !== seatId)
+// Funció per seleccionar/deseleccionar un seient
+function toggleSeatSelection(seat) {
+  if (seat.status === 'Ocupada') return
+  if (selectedSeats.value.includes(seat.id)) {
+    selectedSeats.value = selectedSeats.value.filter(id => id !== seat.id)
+  } else if (selectedSeats.value.length < 10) {
+    selectedSeats.value.push(seat.id)
   } else {
-    if (selectedSeats.value.length < 10) {
-      selectedSeats.value.push(seatId)
-    } else {
-      alert('Solo puedes seleccionar máximo 10 butaques por sesión.')
-    }
+    showErrorMessage('Només pots seleccionar 10 butaques.')
   }
 }
 
-function getSeatClass(row, seat) {
-  const seatId = `${row}${seat}`
-  if (occupiedSeats.value.includes(seatId)) {
-    return 'seat occupied'    // Vermell: ocupades
-  } else if (selectedSeats.value.includes(seatId)) {
-    return 'seat selected'    // Verd: seleccionades per l'usuari
-  } else {
-    return 'seat available'   // Gris: disponibles
-  }
-}
-
-const totalPrice = computed(() => {
-  return selectedSeats.value.reduce((total, seatId) => {
-    const row = seatId.charAt(0)
-    if (row === 'F' && vipActive.value) {
-      return total + (isDiscountDay.value ? 6 : 8)
-    }
-    return total + (isDiscountDay.value ? 4 : 6)
-  }, 0)
-})
-
-async function confirmPurchase() {
+function confirmPurchase() {
   if (selectedSeats.value.length === 0) {
-    alert('Selecciona al menos una butaca.')
+    showErrorMessage('Selecciona almenys una butaca.')
     return
   }
-  
-  // Construimos el payload en formato JSON para enviar a Laravel
-  const payload = {
-    seats: selectedSeats.value,
-    vipActive: vipActive.value,
-    isDiscountDay: isDiscountDay.value
-  }
-  
-  try {
-    const res = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/purchase`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      // Enviamos los datos en formato JSON, que Laravel debe guardar en la base de datos
-      body: JSON.stringify(payload)
-    })
-    const data = await res.json()
-    if (data.success) {
-      // Se asume que Laravel devuelve { success: true } y guarda los asientos en un campo JSON
-      occupiedSeats.value = [...occupiedSeats.value, ...selectedSeats.value]
-      alert(`Compra realizada. Butaques: ${selectedSeats.value.join(', ')}. Total: €${totalPrice.value}`)
-      selectedSeats.value = []
-    } else {
-      alert(data.message || 'Error en la compra. Revisa si ya tienes entradas para esta sesión.')
-    }
-  } catch (error) {
-    console.error('Error al comprar entradas:', error)
-    alert('Error al comprar las entradas.')
-  }
+  showSuccessMessage('Entrades comprades correctament!')
+  selectedSeats.value = []
+}
+
+function clearSelection() {
+  selectedSeats.value = []
+  errorMessage.value = ''
+}
+
+function logout() {
+  localStorage.removeItem('userData')
+  userData.value = { name: '', surname: '', phone: '' }
+  selectedSeats.value = []
+  showSuccessMessage('Sessió tancada correctament.')
+}
+
+function showErrorMessage(message) {
+  errorMessage.value = message
+  setTimeout(() => {
+    errorMessage.value = ''
+  }, 5000)
+}
+
+function showSuccessMessage(message) {
+  successMessage.value = message
+  setTimeout(() => {
+    successMessage.value = ''
+  }, 5000)
 }
 </script>
 
 <style scoped>
-.options {
+@import url("https://fonts.googleapis.com/css?family=Montserrat&display=swap");
+@import url("https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css");
+
+.cinema {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem auto;
+  max-width: 800px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.showcase {
+  display: flex;
+  justify-content: space-between;
+  list-style-type: none;
+  background: rgba(0,0,0,0.1);
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: #777;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 10px;
+}
+
+.showcase li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+}
+
+.showcase li small {
+  margin-left: 2px;
+}
+
+.map-info {
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+/* Estils per al pati de butaques i centrant el seu contingut */
+.pati {
+  width: 100%;
+  margin-bottom: 20px;
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
 }
-.seat-grid {
-  display: grid;
-  grid-template-columns: repeat(10, 40px);
+
+.pati-grid {
+  display: flex;
+  flex-direction: column;
   gap: 5px;
+  align-items: center;
+}
+
+.pati-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.pati-row .row-label {
+  width: 20px;
+  font-weight: bold;
+  margin-right: 5px;
+  text-align: center;
+}
+
+.pati-row .row-seats {
+  display: flex;
+  gap: 3px;
+}
+
+.pati-row .seat {
+  background-color: #808080; /* Gris: disponibles */
+  height: 25px;
+  width: 25px;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  color: #fff;
+  font-size: 0.7rem;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
 }
-.seat-row {
-  display: contents;
-}
+
+/* Estils per als seients globals */
 .seat {
-  padding: 10px;
-  text-align: center;
-  border-radius: 5px;
-  user-select: none;
-  transition: background-color 0.3s;
-  cursor: pointer;
+  background-color: #808080; /* Gris: disponibles */
+  height: 25px;
+  width: 30px;
+  margin: 5px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.8rem;
 }
-/* Gris: Disponibles */
-.seat.available {
-  background-color: #ccc;
-  color: #000;
-}
-/* Verd: Seleccionades per l'usuari */
+
 .seat.selected {
-  background-color: #4caf50;
-  color: white;
+  background-color: #28a745; /* Verd: seleccionades */
 }
-/* Vermell: Ocupades */
+
 .seat.occupied {
-  background-color: #f44336;
-  color: white;
+  background-color: #dc3545; /* Vermell: ocupades */
+  color: #fff;
 }
-.summary {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-}
-.buy-button {
-  background-color: #e50914;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.1rem;
+
+.seat:not(.occupied):hover {
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transform: scale(1.1);
 }
-.buy-button:hover {
-  background-color: #b20710;
+
+p.text {
+  margin: 40px 0;
+  font-size: 1rem;
+}
+
+p.text span {
+  color: #28a745;
+  font-weight: 600;
+}
+
+/* Formulari i botons */
+.user-form {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.input-field {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.buttons {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn {
+  padding: 0.6rem 1rem;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+.buy {
+  background-color: #007bff;
+}
+
+.buy:hover {
+  background-color: #0056b3;
+}
+
+.clear {
+  background-color: #6c757d;
+}
+
+.clear:hover {
+  background-color: #495057;
+}
+
+.logout {
+  background-color: #dc3545;
+}
+
+.logout:hover {
+  background-color: #c82333;
 }
 </style>

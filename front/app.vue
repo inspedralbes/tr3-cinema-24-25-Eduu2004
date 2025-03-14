@@ -9,7 +9,6 @@
           <NuxtLink to="/auth">Login / Registro</NuxtLink>
         </template>
         <template v-else>
-          <span>Bienvenido, {{ user ? user.name : 'Usuario' }}</span>
           <button @click="logout">Logout</button>
         </template>
       </nav>

@@ -157,20 +157,21 @@
       </div>
     </section>
   </template>
-    
+      
   <script setup>
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { useState } from '#app'
   
   const router = useRouter()
   
   const isRegister = ref(false)
-    
+  
   const loginForm = ref({
     email: '',
     password: ''
   })
-    
+  
   const registerForm = ref({
     name: '',
     lastname: '',
@@ -179,16 +180,23 @@
     password_confirmation: '',
     phone: ''
   })
-    
+  
   const loginError = ref('')
   const registerError = ref('')
-    
+  
+  // Variables globales para token y usuario usando useState (este actúa como store global en Nuxt 3)
+  const token = useState('token', () => null)
+  const user = useState('user', () => null)
+  
   async function login() {
     loginError.value = ''
     try {
       const res = await fetch('http://localhost:8000/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json' 
+        },
         body: JSON.stringify(loginForm.value)
       })
       const data = await res.json()
@@ -196,15 +204,20 @@
         loginError.value = data.message || 'Login failed'
         return
       }
+      // Guarda los datos en localStorage
+      localStorage.setItem('access_token', data.data.access_token)
+      localStorage.setItem('user', JSON.stringify(data.data.user))
+      // Actualiza el estado global
+      token.value = data.data.access_token
+      user.value = data.data.user
       console.log('Login successful', data)
-      // Redirige al index.vue (ruta '/')
       router.push('/')
     } catch (err) {
       loginError.value = 'An error occurred'
       console.error(err)
     }
   }
-    
+  
   async function register() {
     registerError.value = ''
     try {
@@ -229,12 +242,12 @@
       console.error(err)
     }
   }
-    
+  
   function toggleForm() {
     isRegister.value = !isRegister.value
   }
   </script>
-    
+      
   <style scoped>
   .vh-100 {
     height: 100vh;

@@ -5,13 +5,11 @@
         <NuxtLink to="/">Inicio</NuxtLink>
         <NuxtLink to="/sessions">Ver Sesiones</NuxtLink>
         <NuxtLink to="/tickets">Entradas</NuxtLink>
-        <!-- Si el usuario no está autenticado, se muestra el enlace para login/registro -->
-        <template v-if="!user">
+        <template v-if="!token">
           <NuxtLink to="/auth">Login / Registro</NuxtLink>
         </template>
-        <!-- Si el usuario está autenticado, se muestra su nombre y un botón de logout -->
         <template v-else>
-          <span>Bienvenido, {{ user.name }}</span>
+          <span>Bienvenido, {{ user ? user.name : 'Usuario' }}</span>
           <button @click="logout">Logout</button>
         </template>
       </nav>
@@ -26,26 +24,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { useState } from '#app'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Variable reactiva para almacenar la información del usuario autenticado
-const user = ref(null)
+const user = useState('user', () => null)
+const token = useState('token', () => null)
 const router = useRouter()
 
-// Al montar el componente, se busca la información del usuario en localStorage
 onMounted(() => {
+  const storedToken = localStorage.getItem('access_token')
   const storedUser = localStorage.getItem('user')
+  if (storedToken) {
+    token.value = storedToken
+  }
   if (storedUser) {
     user.value = JSON.parse(storedUser)
   }
 })
 
-// Función para realizar el logout
 function logout() {
   localStorage.removeItem('user')
   localStorage.removeItem('access_token')
   user.value = null
+  token.value = null
   router.push('/auth')
 }
 </script>

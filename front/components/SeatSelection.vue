@@ -13,11 +13,15 @@
       <li>
         <div class="seat occupied"></div>
         <small>Vermell: ocupades</small>
-      </li>    
+      </li>
+      <li>
+        <div class="seat vip"></div>
+        <small>Daurat: VIP disponibles</small>
+      </li>
     </ul>
+
     <p class="map-info">L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).</p>
 
-    <!-- Pati de butaques amb files A–L i 10 butaques per fila -->
     <div class="pati">
       <div class="pati-grid">
         <div class="pati-row" v-for="row in patiRows" :key="row.letter">
@@ -27,7 +31,11 @@
               class="seat"
               v-for="seat in row.seats" 
               :key="seat.id"
-              :class="{ occupied: seat.status === 'Ocupada', selected: selectedSeats.includes(seat.id) }"
+              :class="{
+                occupied: seat.status === 'Ocupada',
+                selected: isSelected(seat),
+                vip: seat.type === 'VIP' && seat.status === 'Disponible' && !isSelected(seat)
+              }"
               @click="toggleSeatSelection(seat)"
             >
               {{ seat.number }}
@@ -42,11 +50,9 @@
       <span id="total">{{ totalPrice }}</span> €
     </p>
 
-    <!-- Missatges d'error i d'èxit -->
     <div v-if="errorMessage" class="text-red-500">{{ errorMessage }}</div>
     <div v-if="successMessage" class="text-green-500">{{ successMessage }}</div>
     
-    <!-- Formulari d'usuari -->
     <div class="user-form">
       <h3 class="text-lg font-bold mt-6">Dades personals</h3>
       <input v-model="userData.name" type="text" placeholder="Nom" class="input-field" />
@@ -54,7 +60,6 @@
       <input v-model="userData.phone" type="text" placeholder="Telèfon" class="input-field" />
     </div>
     
-    <!-- Botons -->
     <div class="buttons">
       <button @click="confirmPurchase" class="btn buy">Comprar Entrades</button>
       <button @click="clearSelection" class="btn clear">Netejar selecció</button>
@@ -63,50 +68,112 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+const props = defineProps({
+  sessionId: {
+    type: String,
+    required: true
+  }
+})
 
-// Array de files per al pati (A–L) amb 10 butaques per fila
 const rowLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
-const patiRows = rowLetters.map(letter => ({
+const patiRows = ref(rowLetters.map(letter => ({
   letter,
   seats: Array.from({ length: 10 }, (_, i) => ({
-    id: `p-${letter}-${i + 1}`,
+    id: `p-${letter}-${i + 1}`, 
     row: letter,
     number: i + 1,
-    status: 'Disponible' // Tots com a disponibles per defecte
+    status: 'Disponible',
+    type: letter === 'F' ? 'VIP' : 'Normal'
   }))
-}))
+})))
 
-// Variables reactives per a la selecció
+onMounted(async () => {
+  try {
+    const res = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`)
+    if (!res.ok) throw new Error("Error al carregar els seients des del backend")
+    const data = await res.json()
+    data.data.forEach(dbSeat => {
+      const row = patiRows.value.find(r => r.letter === dbSeat.row)
+      if (row) {
+        const seat = row.seats.find(s => s.number === dbSeat.number)
+        if (seat) {
+          seat.status = dbSeat.status 
+          if (dbSeat.type) {
+            seat.type = dbSeat.type
+          }
+        }
+      }
+    })
+  } catch (err) {
+    console.error("Error carregant seients:", err)
+  }
+})
+
 const selectedSeats = ref([])
 
-// Preu fix: 6€ per butaca
-const totalPrice = computed(() => selectedSeats.value.length * 6)
+const totalPrice = computed(() => {
+  return selectedSeats.value.reduce((acc, seat) => {
+    return acc + (seat.row === 'F' ? 8 : 6)
+  }, 0)
+})
 
-// Dades d'usuari i missatges
 const userData = ref({ name: '', surname: '', phone: '' })
 const errorMessage = ref('')
 const successMessage = ref('')
 
-// Funció per seleccionar/deseleccionar un seient
+function isSelected(seat) {
+  return selectedSeats.value.some(s => s.row === seat.row && s.number === seat.number)
+}
+
 function toggleSeatSelection(seat) {
   if (seat.status === 'Ocupada') return
-  if (selectedSeats.value.includes(seat.id)) {
-    selectedSeats.value = selectedSeats.value.filter(id => id !== seat.id)
+  if (isSelected(seat)) {
+    selectedSeats.value = selectedSeats.value.filter(s => !(s.row === seat.row && s.number === seat.number))
   } else if (selectedSeats.value.length < 10) {
-    selectedSeats.value.push(seat.id)
+    selectedSeats.value.push({ row: seat.row, number: seat.number })
   } else {
     showErrorMessage('Només pots seleccionar 10 butaques.')
   }
 }
 
-function confirmPurchase() {
+async function confirmPurchase() {
   if (selectedSeats.value.length === 0) {
     showErrorMessage('Selecciona almenys una butaca.')
     return
   }
-  showSuccessMessage('Entrades comprades correctament!')
-  selectedSeats.value = []
+  if (!userData.value.name || !userData.value.surname || !userData.value.phone) {
+    showErrorMessage('Si us plau, omple totes les dades personals.')
+    return
+  }
+  
+  try {
+    const res = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ seats: selectedSeats.value })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showErrorMessage(data.message || 'Error al reservar seients');
+      return;
+    }
+    showSuccessMessage('Entrades comprades correctament!');
+    patiRows.value.forEach(row => {
+      row.seats.forEach(seat => {
+        if (isSelected(seat)) {
+          seat.status = 'Ocupada'
+        }
+      })
+    })
+    selectedSeats.value = []
+  } catch (err) {
+    showErrorMessage('An error occurred');
+    console.error(err);
+  }
 }
 
 function clearSelection() {
@@ -151,7 +218,7 @@ function showSuccessMessage(message) {
   border-radius: 5px;
   color: #777;
   width: 100%;
-  max-width: 400px;
+  max-width: 650px;
   margin-bottom: 10px;
 }
 
@@ -171,7 +238,6 @@ function showSuccessMessage(message) {
   margin-bottom: 20px;
 }
 
-/* Estils per al pati de butaques i centrant el seu contingut */
 .pati {
   width: 100%;
   margin-bottom: 20px;
@@ -205,7 +271,7 @@ function showSuccessMessage(message) {
 }
 
 .pati-row .seat {
-  background-color: #808080; /* Gris: disponibles */
+  background-color: #808080;
   height: 25px;
   width: 25px;
   display: flex;
@@ -217,9 +283,8 @@ function showSuccessMessage(message) {
   border-top-right-radius: 5px;
 }
 
-/* Estils per als seients globals */
 .seat {
-  background-color: #808080; /* Gris: disponibles */
+  background-color: #808080;
   height: 25px;
   width: 30px;
   margin: 5px;
@@ -233,11 +298,16 @@ function showSuccessMessage(message) {
 }
 
 .seat.selected {
-  background-color: #28a745; /* Verd: seleccionades */
+  background-color: #28a745; 
+}
+
+/* Se aplica un color dorado als seients VIP disponibles */
+.seat.vip {
+  background-color: gold !important;
 }
 
 .seat.occupied {
-  background-color: #dc3545; /* Vermell: ocupades */
+  background-color: #dc3545; 
   color: #fff;
 }
 
@@ -256,7 +326,6 @@ p.text span {
   font-weight: 600;
 }
 
-/* Formulari i botons */
 .user-form {
   width: 100%;
   margin-top: 1rem;
@@ -303,5 +372,4 @@ p.text span {
 .clear:hover {
   background-color: #495057;
 }
-
 </style>

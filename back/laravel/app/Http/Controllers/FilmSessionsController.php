@@ -109,4 +109,24 @@ class FilmSessionsController extends Controller
         $seats = Seats::where('session_id', $id)->get();
         return response()->json(['data' => $seats]);
     }
+
+    public function reserveSeats(Request $request, $sessionId)
+{
+    $selectedSeats = $request->input('seats', []); // Cada elemento: ['row' => 'L', 'number' => 10]
+    \App\Models\Seats::where('session_id', $sessionId)
+        ->where(function($query) use ($selectedSeats) {
+            foreach ($selectedSeats as $seat) {
+                $query->orWhere(function ($q) use ($seat) {
+                    $q->where('row', $seat['row'])
+                      ->where('number', $seat['number']);
+                });
+            }
+        })
+        ->update(['status' => 'Ocupada']);
+
+    return response()->json([
+        'message' => 'Asientos reservados correctamente'
+    ], 200);
+}
+
 }

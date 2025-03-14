@@ -11,6 +11,9 @@ use App\Http\Controllers\AuthController;
 Route::post('auth/register', [AuthController::class, 'register']);
 Route::post('auth/login', [AuthController::class, 'login']);
 
+
+Route::post('/sessions/{id}/seats', [FilmSessionsController::class, 'reserveSeats']);
+
 // Rutas de sesiones de cine
 Route::get('/sessions', [FilmSessionsController::class, 'index']); // Obtener todas las sesiones
 Route::get('/sessions/upcoming', [FilmSessionsController::class, 'upcoming']); // Próximas sesiones (si agregas esta función)

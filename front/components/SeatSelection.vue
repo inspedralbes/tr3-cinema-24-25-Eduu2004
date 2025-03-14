@@ -58,7 +58,6 @@
     <div class="buttons">
       <button @click="confirmPurchase" class="btn buy">Comprar Entrades</button>
       <button @click="clearSelection" class="btn clear">Netejar selecció</button>
-      <button @click="logout" class="btn logout">Tancar sessió</button>
     </div>
   </div>
 </template>
@@ -113,13 +112,6 @@ function confirmPurchase() {
 function clearSelection() {
   selectedSeats.value = []
   errorMessage.value = ''
-}
-
-function logout() {
-  localStorage.removeItem('userData')
-  userData.value = { name: '', surname: '', phone: '' }
-  selectedSeats.value = []
-  showSuccessMessage('Sessió tancada correctament.')
 }
 
 function showErrorMessage(message) {
@@ -312,11 +304,4 @@ p.text span {
   background-color: #495057;
 }
 
-.logout {
-  background-color: #dc3545;
-}
-
-.logout:hover {
-  background-color: #c82333;
-}
 </style>

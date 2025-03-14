@@ -5,6 +5,11 @@ use App\Http\Controllers\FilmSessionsController;
 use App\Http\Controllers\MoviesController;
 use App\Http\Controllers\SeatsController;
 use App\Http\Controllers\TicketsController;
+use App\Http\Controllers\AuthController;
+
+
+Route::post('auth/register', [AuthController::class, 'register']);
+Route::post('auth/login', [AuthController::class, 'login']);
 
 // Rutas de sesiones de cine
 Route::get('/sessions', [FilmSessionsController::class, 'index']); // Obtener todas las sesiones

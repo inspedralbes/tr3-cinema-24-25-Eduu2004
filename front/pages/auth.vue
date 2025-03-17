@@ -57,7 +57,6 @@
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
   
-                  <!-- Formulari de registre -->
                   <form v-else @submit.prevent="register">
                     <div class="form-outline mb-4">
                       <input

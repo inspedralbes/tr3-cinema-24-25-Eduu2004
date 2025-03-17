@@ -13,7 +13,7 @@
 
         <div class="session-info">
           <h3 class="movie-title">{{ session.movie ? session.movie.title : 'Película no disponible' }}</h3>
-          <p class="session-time">{{ formatDate(session.date) }} - {{ session.time }}</p>
+          <p class="session-time">{{ formatDate(session.date) }} - {{ session.time.slice(0, 5) }}</p>
           <NuxtLink :to="`/sessions/${session.id}`" class="btn-buy-tickets">Comprar entrades</NuxtLink>
         </div>
       </div>

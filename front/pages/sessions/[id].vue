@@ -30,7 +30,6 @@ const route = useRoute()
 const movie = ref({})
 const session = ref({})
 
-// Cargar datos de la sesión y la película
 onMounted(async () => {
   try {
     const res = await fetch(`http://localhost:8000/api/sessions/${route.params.id}`)

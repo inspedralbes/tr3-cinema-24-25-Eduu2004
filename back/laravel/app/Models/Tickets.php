@@ -9,7 +9,7 @@ class Tickets extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'session_id', 'seats', 'price'];
+    protected $fillable = ['email', 'session_id', 'seats', 'price'];
 
     public function session()
     {

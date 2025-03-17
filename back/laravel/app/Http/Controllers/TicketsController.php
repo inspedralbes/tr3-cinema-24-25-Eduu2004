@@ -25,14 +25,12 @@ class TicketsController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id'    => 'required|exists:users,id',
+            'email'    => 'required|string',
             'session_id' => 'required|exists:film_sessions,id',
-            'seats'      => 'required|array|min:1|max:10', // Máximo 10 asientos
+            'seats'      => 'required|array|min:1|max:10', 
             'price'      => 'required|numeric',
-            // Puedes agregar validaciones adicionales si es necesario.
         ]);
 
-        // Verificar si el usuario ya tiene entradas para esta sesión
         $existingTicket = Tickets::where('user_id', $validated['user_id'])
             ->where('session_id', $validated['session_id'])
             ->first();
@@ -40,24 +38,13 @@ class TicketsController extends Controller
             return redirect()->back()->with('error', 'Ja tens entrades per aquesta sessió.');
         }
 
-        // (Opcional) Validar que cada asiento esté disponible
-        // Por ejemplo, podrías iterar sobre $validated['seats'] y verificar el estado en la tabla Seats.
 
-        // Guardar el ticket con los asientos en formato JSON
         $ticket = Tickets::create([
-            'user_id'    => $validated['user_id'],
+            'email'    => $validated['email'],
             'session_id' => $validated['session_id'],
             'seats'      => json_encode($validated['seats']),
             'price'      => $validated['price']
         ]);
-
-        // Aquí, si lo deseas, podrías actualizar el estado de cada asiento a "ocupat" en la tabla Seats.
-        // foreach ($validated['seats'] as $seatIdentifier) {
-        //     $seat = Seats::where('identifier', $seatIdentifier)->first();
-        //     if ($seat) {
-        //         $seat->update(['status' => 'ocupat']);
-        //     }
-        // }
 
         return redirect()->route('tickets.index')->with('success', 'Ticket creat correctament!');
     }
@@ -78,7 +65,7 @@ class TicketsController extends Controller
     public function update(Request $request, Tickets $ticket)
     {
         $validated = $request->validate([
-            'user_id'    => 'required|exists:users,id',
+            'email'    => 'required|string',
             'session_id' => 'required|exists:film_sessions,id',
             'seat_id'    => 'required|exists:seats,id',
             'price'      => 'required|numeric',

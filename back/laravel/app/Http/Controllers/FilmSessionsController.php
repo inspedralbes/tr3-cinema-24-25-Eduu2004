@@ -112,8 +112,8 @@ class FilmSessionsController extends Controller
 
     public function reserveSeats(Request $request, $sessionId)
 {
-    $selectedSeats = $request->input('seats', []); // Cada elemento: ['row' => 'L', 'number' => 10]
-    \App\Models\Seats::where('session_id', $sessionId)
+    $selectedSeats = $request->input('seats', []);
+    Seats::where('session_id', $sessionId)
         ->where(function($query) use ($selectedSeats) {
             foreach ($selectedSeats as $seat) {
                 $query->orWhere(function ($q) use ($seat) {

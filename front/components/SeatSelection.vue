@@ -20,16 +20,18 @@
       </li>
     </ul>
 
-    <p class="map-info">L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).</p>
+    <p class="map-info">
+      L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).
+    </p>
 
     <div class="pati">
       <div class="pati-grid">
         <div class="pati-row" v-for="row in patiRows" :key="row.letter">
           <div class="row-label">{{ row.letter }}</div>
           <div class="row-seats">
-            <div 
+            <div
               class="seat"
-              v-for="seat in row.seats" 
+              v-for="seat in row.seats"
               :key="seat.id"
               :class="{
                 occupied: seat.status === 'Ocupada',
@@ -57,6 +59,7 @@
       <h3 class="text-lg font-bold mt-6">Dades personals</h3>
       <input v-model="userData.name" type="text" placeholder="Nom" class="input-field" />
       <input v-model="userData.surname" type="text" placeholder="Cognom" class="input-field" />
+      <input v-model="userData.email" type="email" placeholder="Adreça electrònica" class="input-field" />
       <input v-model="userData.phone" type="text" placeholder="Telèfon" class="input-field" />
     </div>
     
@@ -69,6 +72,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+
 const props = defineProps({
   sessionId: {
     type: String,
@@ -76,6 +80,9 @@ const props = defineProps({
   }
 })
 
+// Generem les files de la sala. Per cada seient, assignem també el camp "type".
+// Si la fila és "F", i la sessió té VIP (aquí assumim que la fila F sempre és VIP),
+ // el tipus serà "VIP"; en cas contrari, serà "Normal".
 const rowLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
 const patiRows = ref(rowLetters.map(letter => ({
   letter,
@@ -98,7 +105,7 @@ onMounted(async () => {
       if (row) {
         const seat = row.seats.find(s => s.number === dbSeat.number)
         if (seat) {
-          seat.status = dbSeat.status 
+          seat.status = dbSeat.status
           if (dbSeat.type) {
             seat.type = dbSeat.type
           }
@@ -107,6 +114,15 @@ onMounted(async () => {
     })
   } catch (err) {
     console.error("Error carregant seients:", err)
+  }
+  
+  const storedUser = localStorage.getItem('user')
+  if (storedUser) {
+    const parsedUser = JSON.parse(storedUser)
+    userData.value.name = parsedUser.name || ''
+    userData.value.surname = parsedUser.lastname || ''
+    userData.value.email = parsedUser.email || ''
+    userData.value.phone = parsedUser.phone || ''
   }
 })
 
@@ -118,10 +134,11 @@ const totalPrice = computed(() => {
   }, 0)
 })
 
-const userData = ref({ name: '', surname: '', phone: '' })
+const userData = ref({ name: '', surname: '', email: '', phone: '' })
 const errorMessage = ref('')
 const successMessage = ref('')
 
+// Comprova si un seient ja està seleccionat
 function isSelected(seat) {
   return selectedSeats.value.some(s => s.row === seat.row && s.number === seat.number)
 }
@@ -150,18 +167,15 @@ async function confirmPurchase() {
   try {
     const res = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ seats: selectedSeats.value })
-    });
-    const data = await res.json();
+    })
+    const data = await res.json()
     if (!res.ok) {
-      showErrorMessage(data.message || 'Error al reservar seients');
-      return;
+      showErrorMessage(data.message || 'Error al reservar seients')
+      return
     }
-    showSuccessMessage('Entrades comprades correctament!');
+    showSuccessMessage('Entrades comprades correctament!')
     patiRows.value.forEach(row => {
       row.seats.forEach(seat => {
         if (isSelected(seat)) {
@@ -171,8 +185,8 @@ async function confirmPurchase() {
     })
     selectedSeats.value = []
   } catch (err) {
-    showErrorMessage('An error occurred');
-    console.error(err);
+    showErrorMessage('S\'ha produït un error')
+    console.error(err)
   }
 }
 
@@ -183,16 +197,12 @@ function clearSelection() {
 
 function showErrorMessage(message) {
   errorMessage.value = message
-  setTimeout(() => {
-    errorMessage.value = ''
-  }, 5000)
+  setTimeout(() => { errorMessage.value = '' }, 5000)
 }
 
 function showSuccessMessage(message) {
   successMessage.value = message
-  setTimeout(() => {
-    successMessage.value = ''
-  }, 5000)
+  setTimeout(() => { successMessage.value = '' }, 5000)
 }
 </script>
 
@@ -298,16 +308,15 @@ function showSuccessMessage(message) {
 }
 
 .seat.selected {
-  background-color: #28a745; 
+  background-color: #28a745;
 }
 
-/* Se aplica un color dorado als seients VIP disponibles */
 .seat.vip {
   background-color: gold !important;
 }
 
 .seat.occupied {
-  background-color: #dc3545; 
+  background-color: #dc3545;
   color: #fff;
 }
 
@@ -371,5 +380,12 @@ p.text span {
 
 .clear:hover {
   background-color: #495057;
+}
+
+.img-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
 }
 </style>

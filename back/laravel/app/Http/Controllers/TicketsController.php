@@ -43,7 +43,6 @@ class TicketsController extends Controller
             return redirect()->back()->with('error', 'Ja tens entrades per aquesta sessió.');
         }
 
-        // Creem el tiquet
         $ticket = Tickets::create([
             'email'      => $validated['email'],
             'session_id' => $validated['session_id'],
@@ -51,18 +50,15 @@ class TicketsController extends Controller
             'price'      => $validated['price']
         ]);
 
-        // Obtenim la sessió amb la informació de la pel·lícula
         $session = filmSessions::with('movie')->findOrFail($validated['session_id']);
 
-        // Enviem un correu amb un PDF per cada seient seleccionat
         $selectedSeats = json_decode($ticket->seats, true);
         foreach ($selectedSeats as $seat) {
             $ticketData = [
-                'seat'   => $seat, // per exemple, ['row' => 'A', 'number' => 5]
+                'seat'   => $seat,
                 'time'   => $session->time,
                 'date'   => $session->date,
                 'movie'  => $session->movie->title,
-                // Afegir més dades si cal, per exemple, sala, preu, etc.
             ];
             Mail::to($validated['email'])->send(new TicketMail($ticketData));
         }

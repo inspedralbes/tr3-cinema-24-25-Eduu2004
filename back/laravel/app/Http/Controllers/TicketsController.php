@@ -114,14 +114,16 @@ class TicketsController extends Controller
             'email'      => 'required|string|email',
             'session_id' => 'required|exists:film_sessions,id',
             'seats'      => 'required|array|min:1|max:10',
-            'price'      => 'required|numeric',
+            // Eliminem 'price' perquè es calcularà per cada seient
         ]);
 
+        // Obté la sessió amb la informació de la pel·lícula
         $session = filmSessions::with('movie')->findOrFail($validated['session_id']);
 
         $ticketsCreated = [];
 
         foreach ($validated['seats'] as $seat) {
+            // Comprovem si aquest seient ja té tiquet per aquest email i sessió (opcional)
             $exists = Tickets::where('email', $validated['email'])
                 ->where('session_id', $validated['session_id'])
                 ->whereJsonContains('seats', $seat)
@@ -130,24 +132,32 @@ class TicketsController extends Controller
                 return response()->json(['error' => 'Ja tens una entrada per aquest seient en aquesta sessió.'], 400);
             }
 
+            // Calcula el preu segons el tipus de seient: si la fila és "F", és VIP (8€); sinó, 6€
+            $ticketPrice = ($seat['row'] === 'F') ? 8 : 6;
+
+            // Crea un tiquet per aquest seient (cada tiquet guarda un array amb un sol element)
             $ticket = Tickets::create([
                 'email'      => $validated['email'],
                 'session_id' => $validated['session_id'],
                 'seats'      => json_encode([$seat]),
-                'price'      => $validated['price'] / count($validated['seats']),
+                'price'      => $ticketPrice,
             ]);
             $ticketsCreated[] = $ticket;
 
+            // Actualitza l'estat del seient a la BD
             Seats::where('session_id', $validated['session_id'])
                 ->where('row', $seat['row'])
                 ->where('number', $seat['number'])
                 ->update(['status' => 'Ocupada']);
 
+            // Prepara les dades per al correu, incloent la id del tiquet
             $ticketData = [
-                'seat'   => $seat,
+                'id'     => $ticket->id,
+                'seat'   => $seat, // Ha de ser un array amb 'row' i 'number'
                 'time'   => $session->time,
                 'date'   => $session->date,
                 'movie'  => $session->movie->title,
+                'price'  => $ticketPrice,
             ];
 
             Mail::to($validated['email'])->send(new TicketMail($ticketData));

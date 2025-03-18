@@ -109,48 +109,53 @@ class TicketsController extends Controller
     }
 
     public function purchase(Request $request)
-{
-    
-    $validated = $request->validate([
-        'email'      => 'required|string|email',
-        'session_id' => 'required|exists:film_sessions,id',
-        'seats'      => 'required|array|min:1|max:10',
-        'price'      => 'required|numeric',
-    ]);
+    {
+        $validated = $request->validate([
+            'email'      => 'required|string|email',
+            'session_id' => 'required|exists:film_sessions,id',
+            'seats'      => 'required|array|min:1|max:10',
+            'price'      => 'required|numeric',
+        ]);
 
-    $session = filmSessions::with('movie')->findOrFail($validated['session_id']);
+        $session = filmSessions::with('movie')->findOrFail($validated['session_id']);
 
-    $ticketsCreated = [];
+        $ticketsCreated = [];
 
-    foreach ($validated['seats'] as $seat) {
-        $exists = Tickets::where('email', $validated['email'])
-            ->where('session_id', $validated['session_id'])
-            ->whereJsonContains('seats', $seat)
-            ->exists();
-        if ($exists) {
-            return response()->json(['error' => 'Ja tens una entrada per aquest seient en aquesta sessió.'], 400);
+        foreach ($validated['seats'] as $seat) {
+            $exists = Tickets::where('email', $validated['email'])
+                ->where('session_id', $validated['session_id'])
+                ->whereJsonContains('seats', $seat)
+                ->exists();
+            if ($exists) {
+                return response()->json(['error' => 'Ja tens una entrada per aquest seient en aquesta sessió.'], 400);
+            }
+
+            $ticket = Tickets::create([
+                'email'      => $validated['email'],
+                'session_id' => $validated['session_id'],
+                'seats'      => json_encode([$seat]),
+                'price'      => $validated['price'] / count($validated['seats']),
+            ]);
+            $ticketsCreated[] = $ticket;
+
+            Seats::where('session_id', $validated['session_id'])
+                ->where('row', $seat['row'])
+                ->where('number', $seat['number'])
+                ->update(['status' => 'Ocupada']);
+
+            $ticketData = [
+                'seat'   => $seat,
+                'time'   => $session->time,
+                'date'   => $session->date,
+                'movie'  => $session->movie->title,
+            ];
+
+            Mail::to($validated['email'])->send(new TicketMail($ticketData));
         }
 
-        $ticket = Tickets::create([
-            'email'      => $validated['email'],
-            'session_id' => $validated['session_id'],
-            'seats'      => json_encode([$seat]),
-            'price'      => $validated['price'] / count($validated['seats']),
-        ]);
-        $ticketsCreated[] = $ticket;
-
-        $ticketData = [
-            'seat'   => $seat, 
-            'time'   => $session->time,
-            'date'   => $session->date,
-            'movie'  => $session->movie->title,
-        ];
-
-        Mail::to($validated['email'])->send(new TicketMail($ticketData));
+        return response()->json(['message' => 'Compra realitzada amb èxit! Rebràs un correu amb el teu tiquet.'], 200);
     }
 
-    return response()->json(['message' => 'Tiquets creats correctament!'], 200);
-}
 
     
 }

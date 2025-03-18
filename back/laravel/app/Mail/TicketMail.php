@@ -28,12 +28,13 @@ class TicketMail extends Mailable
      */
     public function build()
     {
-        // Genera el PDF utilitzant una vista Blade (per exemple, resources/views/ticket.blade.php)
         $pdf = Pdf::loadView('ticket', ['ticketData' => $this->ticketData]);
 
+        $filename = 'ticket_' . $this->ticketData['seat']['row'] . '-' . $this->ticketData['seat']['number'] . '.pdf';
+
         return $this->subject('El teu tiquet de cinema')
-                    ->markdown('emails.ticket') // Vista del cos del correu
-                    ->attachData($pdf->output(), 'ticket_' . $this->ticketData['seat']['row'] . '-' . $this->ticketData['seat']['number'] . '.pdf', [
+                    ->markdown('emails.ticket')
+                    ->attachData($pdf->output(), $filename, [
                         'mime' => 'application/pdf',
                     ]);
     }

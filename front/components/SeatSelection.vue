@@ -4,7 +4,7 @@
     <ul class="showcase">
       <li>
         <div class="seat"></div>
-        <small>Gris: disponibles</small>
+        <small>Gris: disponibles</small>ç
       </li>
       <li>
         <div class="seat selected"></div>
@@ -138,7 +138,6 @@ const userData = ref({ name: '', surname: '', email: '', phone: '' })
 const errorMessage = ref('')
 const successMessage = ref('')
 
-// Comprova si un seient ja està seleccionat
 function isSelected(seat) {
   return selectedSeats.value.some(s => s.row === seat.row && s.number === seat.number)
 }
@@ -156,39 +155,48 @@ function toggleSeatSelection(seat) {
 
 async function confirmPurchase() {
   if (selectedSeats.value.length === 0) {
-    showErrorMessage('Selecciona almenys una butaca.')
-    return
+    showErrorMessage('Selecciona almenys una butaca.');
+    return;
   }
-  if (!userData.value.name || !userData.value.surname || !userData.value.phone) {
-    showErrorMessage('Si us plau, omple totes les dades personals.')
-    return
+  if (!userData.value.name || !userData.value.surname || !userData.value.phone || !userData.value.email) {
+    showErrorMessage('Si us plau, omple totes les dades personals.');
+    return;
   }
   
   try {
-    const res = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`, {
+    const res = await fetch('http://localhost:8000/api/tickets/purchase', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ seats: selectedSeats.value })
-    })
-    const data = await res.json()
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        email: userData.value.email,
+        session_id: props.sessionId,
+        seats: selectedSeats.value,
+        price: totalPrice.value
+      })
+    });
+    const data = await res.json();
     if (!res.ok) {
-      showErrorMessage(data.message || 'Error al reservar seients')
-      return
+      showErrorMessage(data.message || 'Error al reservar seients');
+      return;
     }
-    showSuccessMessage('Entrades comprades correctament!')
+    showSuccessMessage('Entrades comprades correctament! Rebràs el tiquet per correu.');
     patiRows.value.forEach(row => {
       row.seats.forEach(seat => {
         if (isSelected(seat)) {
-          seat.status = 'Ocupada'
+          seat.status = 'Ocupada';
         }
-      })
-    })
-    selectedSeats.value = []
+      });
+    });
+    selectedSeats.value = [];
   } catch (err) {
-    showErrorMessage('S\'ha produït un error')
-    console.error(err)
+    showErrorMessage('S\'ha produït un error');
+    console.error(err);
   }
 }
+
 
 function clearSelection() {
   selectedSeats.value = []

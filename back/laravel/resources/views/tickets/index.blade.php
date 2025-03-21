@@ -23,9 +23,17 @@
             @foreach ($tickets as $ticket)
             <tr>
                 <td>{{ $ticket->id }}</td>
-                <td>{{ $ticket->user->name }}</td>
-                <td>{{ $ticket->session->movie->title }}</td>
-                <td>{{ $ticket->seat->number }}</td>
+                <td>{{ $ticket->email }}</td>
+                <td>{{ $ticket->session ? $ticket->session->movie->title : 'No disponible' }}</td>
+                <td>
+                    @if (!empty($ticket->seats))
+                        @foreach ($ticket->seats as $seat)
+                            {{ $seat['row'] }}-{{ $seat['number'] }}
+                        @endforeach
+                    @else
+                        No asignado
+                    @endif
+                </td>
                 <td>{{ $ticket->price }}</td>
                 <td>
                     <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-warning btn-sm">✏️ Editar</a>

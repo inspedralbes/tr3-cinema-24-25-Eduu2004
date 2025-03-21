@@ -11,11 +11,39 @@ use Illuminate\Support\Facades\Mail;
 
 class TicketsController extends Controller
 {
-    public function index()
-    {
-        $tickets = Tickets::with(['session', 'seat'])->get();
-        return view('tickets.index', compact('tickets'));
+    public function index(Request $request)
+{
+    // Si la petición es a la API, filtra por email
+    if ($request->is('api/*')) {
+        $email = $request->query('email');
+        if (!$email) {
+            return response()->json(['error' => 'Email is required'], 400);
+        }
+
+        // Obtiene los tickets con la sesión y la película
+        $tickets = Tickets::where('email', $email)
+            ->with(['session.movie']) // Asegurar que session y movie están cargados
+            ->get();
+
+        // Decodifica los asientos de JSON a un array
+        foreach ($tickets as $ticket) {
+            $ticket->seats = json_decode($ticket->seats, true);
+        }
+
+        return response()->json(['data' => $tickets]);
     }
+
+    // Para la vista en Blade
+    $tickets = Tickets::with(['session.movie'])->get();
+    foreach ($tickets as $ticket) {
+        $ticket->seats = json_decode($ticket->seats, true);
+    }
+
+    return view('tickets.index', compact('tickets'));
+}
+
+
+    
 
     public function create()
     {
@@ -25,55 +53,54 @@ class TicketsController extends Controller
     }
 
     public function store(Request $request)
-{
-    $validated = $request->validate([
-        'email'      => 'required|string|email',
-        'session_id' => 'required|exists:film_sessions,id',
-        'seats'      => 'required|array|min:1|max:10',
-        'price'      => 'required|numeric',
-    ]);
-
-    // Obté la sessió amb la informació de la pel·lícula
-    $session = filmSessions::with('movie')->findOrFail($validated['session_id']);
-
-    $ticketsCreated = [];
-
-    // Iterem sobre cada seient seleccionat per crear un ticket individual
-    foreach ($validated['seats'] as $seat) {
-        // Comprovem si ja existeix un ticket per aquest seient per a aquest email i sessió (opcional)
-        $exists = Tickets::where('email', $validated['email'])
-            ->where('session_id', $validated['session_id'])
-            ->whereJsonContains('seats', $seat)
-            ->exists();
-        if ($exists) {
-            return response()->json(['error' => 'Ja tens una entrada per aquest seient en aquesta sessió.'], 400);
-        }
-
-        // Crea un tiquet per aquest seient (guardant-lo com a array amb un sol element)
-        $ticket = Tickets::create([
-            'email'      => $validated['email'],
-            'session_id' => $validated['session_id'],
-            'seats'      => json_encode([$seat]),
-            // Dividim el preu total pel nombre de seients per assignar el preu per ticket
-            'price'      => $validated['price'] / count($validated['seats']),
+    {
+        $validated = $request->validate([
+            'email'      => 'required|string|email',
+            'session_id' => 'required|exists:film_sessions,id',
+            'seats'      => 'required|array|min:1|max:10',
+            'price'      => 'required|numeric',
         ]);
 
-        $ticketsCreated[] = $ticket;
+        // Obtiene la sesión con la información de la película
+        $session = filmSessions::with('movie')->findOrFail($validated['session_id']);
 
-        // Prepara les dades per al correu per aquest tiquet individual
-        $ticketData = [
-            'seat'   => $seat, // s'espera que $seat sigui un array amb 'row' i 'number'
-            'time'   => $session->time,
-            'date'   => $session->date,
-            'movie'  => $session->movie->title,
-        ];
+        $ticketsCreated = [];
 
-        Mail::to($validated['email'])->send(new TicketMail($ticketData));
+        // Itera sobre cada asiento seleccionado para crear un ticket individual
+        foreach ($validated['seats'] as $seat) {
+            // Verifica si ya existe un ticket para este asiento y correo en esta sesión
+            $exists = Tickets::where('email', $validated['email'])
+                ->where('session_id', $validated['session_id'])
+                ->whereJsonContains('seats', $seat)
+                ->exists();
+            if ($exists) {
+                return response()->json(['error' => 'Ya tienes un ticket para este asiento en esta sesión.'], 400);
+            }
+
+            // Asegúrate de guardar el campo 'seats' como un array y no como un string JSON
+            $ticket = Tickets::create([
+                'email'      => $validated['email'],
+                'session_id' => $validated['session_id'],
+                'seats'      => json_encode([$seat]), // Guarda como JSON correctamente
+                'price'      => $validated['price'] / count($validated['seats']),
+            ]);
+
+            $ticketsCreated[] = $ticket;
+
+            // Prepara los datos para el correo del ticket individual
+            $ticketData = [
+                'seat'   => $seat, // $seat es un array con 'row' y 'number'
+                'time'   => $session->time,
+                'date'   => $session->date,
+                'movie'  => $session->movie->title,
+            ];
+
+            // Enviar el correo al usuario
+            Mail::to($validated['email'])->send(new TicketMail($ticketData));
+        }
+
+        return response()->json(['message' => 'Tickets creados correctamente!', 'tickets' => $ticketsCreated], 200);
     }
-
-    return response()->json(['message' => 'Tiquets creats correctament!', 'tickets' => $ticketsCreated], 200);
-}
-
 
 
     public function show(Tickets $ticket)
@@ -99,13 +126,13 @@ class TicketsController extends Controller
 
         $ticket->update($validated);
 
-        return redirect()->route('tickets.index')->with('success', 'Ticket actualitzat correctament!');
+        return redirect()->route('tickets.index')->with('success', 'Ticket actualizado correctamente!');
     }
 
     public function destroy(Tickets $ticket)
     {
         $ticket->delete();
-        return redirect()->route('tickets.index')->with('success', 'Ticket eliminat correctament!');
+        return redirect()->route('tickets.index')->with('success', 'Ticket eliminado correctamente!');
     }
 
     public function purchase(Request $request)
@@ -114,28 +141,27 @@ class TicketsController extends Controller
             'email'      => 'required|string|email',
             'session_id' => 'required|exists:film_sessions,id',
             'seats'      => 'required|array|min:1|max:10',
-            // Eliminem 'price' perquè es calcularà per cada seient
         ]);
 
-        // Obté la sessió amb la informació de la pel·lícula
+        // Obtener la sesión con la información de la película
         $session = filmSessions::with('movie')->findOrFail($validated['session_id']);
-
         $ticketsCreated = [];
 
         foreach ($validated['seats'] as $seat) {
-            // Comprovem si aquest seient ja té tiquet per aquest email i sessió (opcional)
+            // Verificar si este asiento ya tiene ticket para este correo electrónico y sesión
             $exists = Tickets::where('email', $validated['email'])
                 ->where('session_id', $validated['session_id'])
                 ->whereJsonContains('seats', $seat)
                 ->exists();
+
             if ($exists) {
-                return response()->json(['error' => 'Ja tens una entrada per aquest seient en aquesta sessió.'], 400);
+                return response()->json(['error' => 'Ya tienes un ticket para este asiento en esta sesión.'], 400);
             }
 
-            // Calcula el preu segons el tipus de seient: si la fila és "F", és VIP (8€); sinó, 6€
+            // Calcular el precio según el tipo de asiento: si la fila es "F", es VIP (8€); sino, 6€
             $ticketPrice = ($seat['row'] === 'F') ? 8 : 6;
 
-            // Crea un tiquet per aquest seient (cada tiquet guarda un array amb un sol element)
+            // Crear un ticket para este asiento
             $ticket = Tickets::create([
                 'email'      => $validated['email'],
                 'session_id' => $validated['session_id'],
@@ -144,16 +170,16 @@ class TicketsController extends Controller
             ]);
             $ticketsCreated[] = $ticket;
 
-            // Actualitza l'estat del seient a la BD
+            // Actualizar el estado del asiento en la base de datos
             Seats::where('session_id', $validated['session_id'])
                 ->where('row', $seat['row'])
                 ->where('number', $seat['number'])
                 ->update(['status' => 'Ocupada']);
 
-            // Prepara les dades per al correu, incloent la id del tiquet
+            // Preparar los datos para el correo electrónico, incluyendo la ID del ticket
             $ticketData = [
                 'id'     => $ticket->id,
-                'seat'   => $seat, // Ha de ser un array amb 'row' i 'number'
+                'seat'   => $seat,
                 'time'   => $session->time,
                 'date'   => $session->date,
                 'movie'  => $session->movie->title,
@@ -163,9 +189,30 @@ class TicketsController extends Controller
             Mail::to($validated['email'])->send(new TicketMail($ticketData));
         }
 
-        return response()->json(['message' => 'Compra realitzada amb èxit! Rebràs un correu amb el teu tiquet.'], 200);
+        return response()->json(['message' => 'Compra realizada con éxito! Recibirás un correo con tu ticket.'], 200);
     }
 
+    public function getTicketsByEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email'
+        ]);
+        
+        // Obtener todos los tickets para ese correo electrónico
+        $tickets = Tickets::where('email', $validated['email'])
+            ->with(['session.movie', 'seat'])  // Asegúrate de cargar tanto la relación 'session' como 'movie' 
+            ->get();
+        
+        if ($tickets->isEmpty()) {
+            return response()->json(['message' => 'No se han encontrado tickets para este correo.'], 404);
+        }
+        
+        return response()->json(['data' => $tickets], 200);
+    }
 
-    
+    public function getSessionTickets($sessionId)
+    {
+        $session = filmSessions::with(['tickets', 'movie'])->findOrFail($sessionId);
+        return response()->json(['data' => $session]);
+    }
 }

@@ -11,14 +11,19 @@ class Tickets extends Model
 
     protected $fillable = ['email', 'session_id', 'seats', 'price'];
 
+    protected $casts = [
+        'seats' => 'array', 
+    ];
+
     public function session()
     {
         return $this->belongsTo(filmSessions::class);
     }
     
-    // Si ya no utilizas la relación con Seats, puedes eliminar este método.
-    // public function seat()
-    // {
-    //     return $this->belongsTo(Seats::class);
-    // }
+    public function seat()
+    {
+        return $this->belongsTo(Seats::class, 'seat_id');
+    }
+
 }
+

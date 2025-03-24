@@ -173,12 +173,23 @@ function toggleSeatSelection(seat) {
 
 async function confirmPurchase() {
   if (selectedSeats.value.length === 0) {
-    showErrorMessage('Selecciona almenys una butaca.');
-    return;
+    showErrorMessage('Selecciona almenys una butaca.')
+    return
   }
   if (!userData.value.name || !userData.value.surname || !userData.value.phone || !userData.value.email) {
-    showErrorMessage('Si us plau, omple totes les dades personals.');
-    return;
+    showErrorMessage('Si us plau, omple totes les dades personals.')
+    return
+  }
+  
+  const ticketsResult = await CommunicationManager.getTickets(userData.value.email)
+  if (ticketsResult.error) {
+    showErrorMessage(ticketsResult.error)
+    return
+  }
+  const existingTickets = ticketsResult.tickets.filter(ticket => String(ticket.session_id) === String(props.sessionId))
+  if (existingTickets.length > 0) {
+    showErrorMessage('Ja tens entrades per aquesta sessió.')
+    return
   }
   
   try {
@@ -191,20 +202,20 @@ async function confirmPurchase() {
     const result = await CommunicationManager.purchaseTickets(purchaseData)
     if (result.error) {
       showErrorMessage(result.error)
-      return;
+      return
     }
-    showSuccessMessage('Entrades comprades correctament! Rebràs el tiquet per correu.');
+    showSuccessMessage('Entrades comprades correctament! Rebràs el tiquet per correu.')
     patiRows.value.forEach(row => {
       row.seats.forEach(seat => {
         if (isSelected(seat)) {
-          seat.status = 'Ocupada';
+          seat.status = 'Ocupada'
         }
-      });
-    });
-    selectedSeats.value = [];
+      })
+    })
+    selectedSeats.value = []
   } catch (err) {
-    showErrorMessage('S\'ha produït un error');
-    console.error(err);
+    showErrorMessage('S\'ha produït un error')
+    console.error(err)
   }
 }
 
@@ -223,6 +234,7 @@ function showSuccessMessage(message) {
   setTimeout(() => { successMessage.value = '' }, 5000)
 }
 </script>
+
 
 <style scoped>
 @import url("https://fonts.googleapis.com/css?family=Montserrat&display=swap");

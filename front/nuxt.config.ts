@@ -3,7 +3,8 @@ export default defineNuxtConfig({
   ssr: false,
   modules: [],
   css: [
-    'bootstrap/dist/css/bootstrap.css'
+    'bootstrap/dist/css/bootstrap.css',
+    'normalize.css'
   ],
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true }

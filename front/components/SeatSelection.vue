@@ -4,7 +4,7 @@
     <ul class="showcase">
       <li>
         <div class="seat"></div>
-        <small>Gris: disponibles</small>ç
+        <small>Gris: disponibles</small>
       </li>
       <li>
         <div class="seat selected"></div>
@@ -73,6 +73,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
+const isDiscountDay = ref(false)
+
 const props = defineProps({
   sessionId: {
     type: String,
@@ -80,9 +82,8 @@ const props = defineProps({
   }
 })
 
-// Generem les files de la sala. Per cada seient, assignem també el camp "type".
-// Si la fila és "F", i la sessió té VIP (aquí assumim que la fila F sempre és VIP),
- // el tipus serà "VIP"; en cas contrari, serà "Normal".
+// Generem les files de la sala.
+// Si la fila és "F", i la sessió té VIP el tipus serà VIP, en cas contrari serà Normal.
 const rowLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
 const patiRows = ref(rowLetters.map(letter => ({
   letter,
@@ -97,15 +98,28 @@ const patiRows = ref(rowLetters.map(letter => ({
 
 onMounted(async () => {
   try {
-    const res = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`)
-    if (!res.ok) throw new Error("Error al carregar els seients des del backend")
-    const data = await res.json()
-    data.data.forEach(dbSeat => {
+    // Primer, obtenim els detalls de la sessió per recuperar is_discount_day
+    const sessionRes = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}`)
+    if (!sessionRes.ok) throw new Error("Error al carregar la sessió")
+    const sessionData = await sessionRes.json()
+    // Assegura't d'accedir a la propietat correcta segons l'estructura de la resposta.
+    // Suposant que la resposta és { message: 'Sessió trobada', data: { session: { ... } } }
+    const session = sessionData.data && sessionData.data.session ? sessionData.data.session : sessionData.session
+    if (session && session.is_discount_day !== undefined) {
+      isDiscountDay.value = Boolean(Number(session.is_discount_day))
+    } else {
+      console.warn("No s'ha trobat la informació de descompte en la sessió")
+    }
+
+    const seatsRes = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`)
+    if (!seatsRes.ok) throw new Error("Error al carregar els seients des del backend")
+    const seatsData = await seatsRes.json()
+    seatsData.data.forEach(dbSeat => {
       const row = patiRows.value.find(r => r.letter === dbSeat.row)
       if (row) {
         const seat = row.seats.find(s => s.number === dbSeat.number)
         if (seat) {
-          seat.status = dbSeat.status
+          seat.status = dbSeat.status   
           if (dbSeat.type) {
             seat.type = dbSeat.type
           }
@@ -130,9 +144,14 @@ const selectedSeats = ref([])
 
 const totalPrice = computed(() => {
   return selectedSeats.value.reduce((acc, seat) => {
-    return acc + (seat.row === 'F' ? 8 : 6)
+    if (isDiscountDay.value) {
+      return acc + (seat.row === 'F' ? 6 : 4)
+    } else {
+      return acc + (seat.row === 'F' ? 8 : 6)
+    }
   }, 0)
 })
+
 
 const userData = ref({ name: '', surname: '', email: '', phone: '' })
 const errorMessage = ref('')

@@ -141,12 +141,15 @@ class TicketsController extends Controller
                 ->where('session_id', $validated['session_id'])
                 ->whereJsonContains('seats', $seat)
                 ->exists();
-
             if ($exists) {
-                return response()->json(['error' => 'Ya tienes un ticket para este asiento en esta sesión.'], 400);
+                return response()->json(['error' => 'Ja tens una entrada per aquest seient en aquesta sessió.'], 400);
             }
 
-            $ticketPrice = ($seat['row'] === 'F') ? 8 : 6;
+            if ($session->is_discount_day) {
+                $ticketPrice = ($seat['row'] === 'F') ? 6 : 4;
+            } else {
+                $ticketPrice = ($seat['row'] === 'F') ? 8 : 6;
+            }
 
             $ticket = Tickets::create([
                 'email'      => $validated['email'],
@@ -173,8 +176,9 @@ class TicketsController extends Controller
             Mail::to($validated['email'])->send(new TicketMail($ticketData));
         }
 
-        return response()->json(['message' => 'Compra realizada con éxito! Recibirás un correo con tu ticket.'], 200);
+        return response()->json(['message' => 'Compra realitzada amb èxit! Rebràs un correu amb el teu tiquet.'], 200);
     }
+
 
     public function getTicketsByEmail(Request $request)
     {

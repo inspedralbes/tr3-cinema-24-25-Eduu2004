@@ -72,9 +72,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import CommunicationManager from '@/stores/communicationManager'
 
 const isDiscountDay = ref(false)
-
 const props = defineProps({
   sessionId: {
     type: String,
@@ -83,7 +83,7 @@ const props = defineProps({
 })
 
 // Generem les files de la sala.
-// Si la fila és "F", i la sessió té VIP el tipus serà VIP, en cas contrari serà Normal.
+// Si la fila és "F", i la sessió té VIP, el tipus serà VIP; en cas contrari, Normal.
 const rowLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
 const patiRows = ref(rowLetters.map(letter => ({
   letter,
@@ -98,20 +98,23 @@ const patiRows = ref(rowLetters.map(letter => ({
 
 onMounted(async () => {
   try {
-    const sessionRes = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}`)
-    if (!sessionRes.ok) throw new Error("Error al carregar la sessió")
-    const sessionData = await sessionRes.json()
-    const session = sessionData.data && sessionData.data.session ? sessionData.data.session : sessionData.session
+    const sessionResult = await CommunicationManager.getSessionDetails(props.sessionId)
+    if (sessionResult.error) {
+      throw new Error(sessionResult.error)
+    }
+    const session = sessionResult.session
     if (session && session.is_discount_day !== undefined) {
       isDiscountDay.value = Boolean(Number(session.is_discount_day))
     } else {
       console.warn("No s'ha trobat la informació de descompte en la sessió")
     }
 
-    const seatsRes = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}/seats`)
-    if (!seatsRes.ok) throw new Error("Error al carregar els seients des del backend")
-    const seatsData = await seatsRes.json()
-    seatsData.data.forEach(dbSeat => {
+    const seatsResult = await CommunicationManager.getSeats(props.sessionId)
+    if (seatsResult.error) {
+      throw new Error(seatsResult.error)
+    }
+    const seatsData = seatsResult.seats
+    seatsData.forEach(dbSeat => {
       const row = patiRows.value.find(r => r.letter === dbSeat.row)
       if (row) {
         const seat = row.seats.find(s => s.number === dbSeat.number)
@@ -126,7 +129,7 @@ onMounted(async () => {
   } catch (err) {
     console.error("Error carregant seients:", err)
   }
-  
+
   const storedUser = localStorage.getItem('user')
   if (storedUser) {
     const parsedUser = JSON.parse(storedUser)
@@ -148,7 +151,6 @@ const totalPrice = computed(() => {
     }
   }, 0)
 })
-
 
 const userData = ref({ name: '', surname: '', email: '', phone: '' })
 const errorMessage = ref('')
@@ -180,22 +182,15 @@ async function confirmPurchase() {
   }
   
   try {
-    const res = await fetch('http://localhost:8000/api/tickets/purchase', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        email: userData.value.email,
-        session_id: props.sessionId,
-        seats: selectedSeats.value,
-        price: totalPrice.value
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      showErrorMessage(data.message || 'Error al reservar seients');
+    const purchaseData = {
+      email: userData.value.email,
+      session_id: props.sessionId,
+      seats: selectedSeats.value,
+      price: totalPrice.value
+    }
+    const result = await CommunicationManager.purchaseTickets(purchaseData)
+    if (result.error) {
+      showErrorMessage(result.error)
       return;
     }
     showSuccessMessage('Entrades comprades correctament! Rebràs el tiquet per correu.');
@@ -212,7 +207,6 @@ async function confirmPurchase() {
     console.error(err);
   }
 }
-
 
 function clearSelection() {
   selectedSeats.value = []

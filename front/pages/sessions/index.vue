@@ -10,7 +10,6 @@
             class="poster-image"
           />
         </div>
-
         <div class="session-info">
           <h3 class="movie-title">{{ session.movie ? session.movie.title : 'Película no disponible' }}</h3>
           <p class="session-time">{{ formatDate(session.date) }} - {{ session.time.slice(0, 5) }}</p>
@@ -23,8 +22,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import CommunicationManager from '@/stores/communicationManager' 
-
+import CommunicationManager from '@/stores/communicationManager'
 
 const sessions = ref([])
 

@@ -2,9 +2,15 @@
   <div class="consulta-entrades">
     <h1>Consulta d'Entrades Comprades</h1>
 
-    <form @submit.prevent="getTickets" class="form-container">
-      <input id="email" type="email" v-model="email" placeholder="Introduïu el teu correu electrònic" required
-        class="input-field" />
+    <form @submit.prevent="fetchTickets" class="form-container">
+      <input
+        id="email"
+        type="email"
+        v-model="email"
+        placeholder="Introduïu el teu correu electrònic"
+        required
+        class="input-field"
+      />
       <button type="submit" class="btn">Buscar</button>
     </form>
 
@@ -14,12 +20,18 @@
     <div v-if="Object.keys(groupedSessions).length">
       <h2>Sessions Futures amb Entrades Comprades</h2>
       <ul class="sessions-list">
-        <li v-for="(ticketsGroup, sessionId) in groupedSessions" :key="sessionId" class="session-item">
+        <li
+          v-for="(ticketsGroup, sessionId) in groupedSessions"
+          :key="sessionId"
+          class="session-item"
+        >
           <span class="session-title">
             🎬 {{ ticketsGroup[0].session?.movie?.title ?? 'Pel·lícula no disponible' }} -
             📅 {{ formatDate(ticketsGroup[0].session?.date) }} 🕒 {{ formatTime(ticketsGroup[0].session?.time) }}
           </span>
-          <button @click="selectSession(sessionId)" class="btn-secondary">Veure Detalls</button>
+          <button @click="selectSession(sessionId)" class="btn-secondary">
+            Veure Detalls
+          </button>
         </li>
       </ul>
     </div>
@@ -38,7 +50,10 @@
       <ul class="tickets-list">
         <li v-for="ticket in groupedSessions[selectedSession.id]" :key="ticket.id">
           🎟️ Seient:
-          <span v-for="seat in ticket.seats" :key="seat.row + '-' + seat.number">
+          <span
+            v-for="seat in ticket.seats"
+            :key="seat.row + '-' + seat.number"
+          >
             {{ seat.row }}{{ seat.number }}
           </span>
           - 💰 Preu: {{ ticket.price }} €
@@ -51,6 +66,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { format, parseISO } from 'date-fns'
+import CommunicationManager from '@/stores/communicationManager'
 
 const email = ref('')
 const tickets = ref([])
@@ -58,19 +74,18 @@ const errorMessage = ref('')
 const loading = ref(false)
 const selectedSession = ref(null)
 
-async function getTickets() {
+async function fetchTickets() {
   loading.value = true
   errorMessage.value = ''
-  selectedSession.value = null
   try {
-    const response = await fetch(`http://localhost:8000/api/tickets?email=${encodeURIComponent(email.value)}`)
-    if (!response.ok) {
-      throw new Error('No s\'han trobat entrades per aquest correu.')
+    const result = await CommunicationManager.getTickets(email.value)
+    if (result.error) {
+      throw new Error(result.error)
     }
-    const data = await response.json()
-    tickets.value = data.data || []
+    tickets.value = result.tickets
   } catch (error) {
-    errorMessage.value = error.message || 'S\'ha produït un error en obtenir les sessions.'
+    errorMessage.value =
+      error.message || "S'ha produït un error en obtenir les entrades."
     tickets.value = []
   } finally {
     loading.value = false
@@ -108,6 +123,7 @@ function formatTime(timeString) {
   return timeString.slice(0, 5)
 }
 </script>
+
 
 <style scoped>
 .consulta-entrades {

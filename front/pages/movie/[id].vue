@@ -31,6 +31,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import CommunicationManager from '@/stores/communicationManager'
 
 const movie = ref(null)
 const route = useRoute()
@@ -38,9 +39,11 @@ const route = useRoute()
 onMounted(async () => {
   const movieId = route.params.id  
   try {
-    const response = await fetch(`http://localhost:8000/api/movies/${movieId}`)
-    const data = await response.json()
-    movie.value = data.movie
+    const result = await CommunicationManager.getMovieDetails(movieId)
+    if (result.error) {
+      throw new Error(result.error)
+    }
+    movie.value = result.movie
   } catch (error) {
     console.error('Error cargando detalles de la película:', error)
   }

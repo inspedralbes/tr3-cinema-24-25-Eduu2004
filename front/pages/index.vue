@@ -41,13 +41,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { fetchMovies } from '@/stores/communicationManager'
+import CommunicationManager from '@/stores/communicationManager'
 
 const movies = ref([])
 const searchQuery = ref("")
 
 onMounted(async () => {
-  movies.value = await fetchMovies()
+  movies.value = await CommunicationManager.fetchMovies()
 })
 
 const filteredMovies = computed(() => {

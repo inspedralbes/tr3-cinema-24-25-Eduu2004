@@ -20,7 +20,7 @@
                     Crea un compte nou
                   </h5><br><br>
 
-                  <!-- Canviem @submit per a loginUser -->
+                  <!-- Utilitzem loginUser per al formulari d'inici de sessió -->
                   <form v-if="!isRegister" @submit.prevent="loginUser">
                     <div class="form-outline mb-4">
                       <input type="email" class="form-control form-control-lg" v-model="loginForm.email" required />
@@ -46,7 +46,7 @@
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
 
-                  <!-- Canviem @submit per a registerUser -->
+                  <!-- Utilitzem registerUser per al formulari de registre -->
                   <form v-else @submit.prevent="registerUser">
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.name" required />
@@ -111,7 +111,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useState } from '#app'
-import { login, register } from '@/stores/communicationManager'
+import CommunicationManager from '@/stores/communicationManager'
 
 const router = useRouter()
 
@@ -139,7 +139,7 @@ const user = useState('user', () => null)
 
 async function loginUser() {
   loginError.value = ''
-  const result = await login(loginForm.value, router)
+  const result = await CommunicationManager.login(loginForm.value, router)
   if (result.error) {
     loginError.value = result.error
   } else {
@@ -151,7 +151,7 @@ async function loginUser() {
 
 async function registerUser() {
   registerError.value = ''
-  const result = await register(registerForm.value, router)
+  const result = await CommunicationManager.register(registerForm.value, router)
   if (result.error) {
     registerError.value = result.error
   } else {

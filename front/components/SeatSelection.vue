@@ -1,71 +1,67 @@
 <template>
   <div class="cinema">
-    <h3>Mapa de butaques</h3>
-    <ul class="showcase">
-      <li>
-        <div class="seat"></div>
-        <small>Gris: disponibles</small>
-      </li>
-      <li>
-        <div class="seat selected"></div>
-        <small>Verd: seleccionades per l'usuari</small>
-      </li>
-      <li>
-        <div class="seat occupied"></div>
-        <small>Vermell: ocupades</small>
-      </li>
-      <li>
-        <div class="seat vip"></div>
-        <small>Daurat: VIP disponibles</small>
-      </li>
-    </ul>
-
-    <p class="map-info">
-      L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).
-    </p>
-
-    <div class="pati">
-      <div class="pati-grid">
-        <div class="pati-row" v-for="row in patiRows" :key="row.letter">
-          <div class="row-label">{{ row.letter }}</div>
-          <div class="row-seats">
-            <div
-              class="seat"
-              v-for="seat in row.seats"
-              :key="seat.id"
-              :class="{
+    <div class="left-panel">
+      <h3 class="section-title">Mapa de butaques</h3>
+      <ul class="showcase">
+        <li>
+          <div class="seat"></div>
+          <small>Gris: disponibles</small>
+        </li>
+        <li>
+          <div class="seat selected"></div>
+          <small>Verd: seleccionades per l'usuari</small>
+        </li>
+        <li>
+          <div class="seat occupied"></div>
+          <small>Vermell: ocupades</small>
+        </li>
+        <li>
+          <div class="seat vip"></div>
+          <small>Daurat: VIP disponibles</small>
+        </li>
+      </ul>
+      <p class="map-info">
+        L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).
+      </p>
+      <div class="pati">
+        <div class="pati-grid">
+          <div class="pati-row" v-for="row in patiRows" :key="row.letter">
+            <div class="row-label">{{ row.letter }}</div>
+            <div class="row-seats">
+              <div class="seat" v-for="seat in row.seats" :key="seat.id" :class="{
                 occupied: seat.status === 'Ocupada',
                 selected: isSelected(seat),
                 vip: seat.type === 'VIP' && seat.status === 'Disponible' && !isSelected(seat)
-              }"
-              @click="toggleSeatSelection(seat)"
-            >
-              {{ seat.number }}
+              }" @click="toggleSeatSelection(seat)">
+                {{ seat.number }}
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <p class="seat-selection" style="text-align: center;">
+        {{ selectedSeats.length }}/10 butaques seleccionats
+      </p>
     </div>
 
-    <p class="text">
-      Has seleccionat <span id="count">{{ selectedSeats.length }}</span> butaques per un preu total de 
-      <span id="total">{{ totalPrice }}</span> €
-    </p>
-
-    <div v-if="errorMessage" class="text-red-500">{{ errorMessage }}</div>
-    <div v-if="successMessage" class="text-green-500">{{ successMessage }}</div>
-    
-    <div class="user-form">
-      <h3 class="text-lg font-bold mt-6">Dades personals</h3>
-      <input v-model="userData.name" type="text" placeholder="Nom" class="input-field" />
-      <input v-model="userData.surname" type="text" placeholder="Cognom" class="input-field" />
-      <input v-model="userData.email" type="email" placeholder="Adreça electrònica" class="input-field" />
-      <input v-model="userData.phone" type="text" placeholder="Telèfon" class="input-field" />
-    </div>
-    
-    <div class="buttons">
-      <button @click="confirmPurchase" class="btn buy">Comprar Entrades</button>
-      <button @click="clearSelection" class="btn clear">Netejar selecció</button>
+    <div class="right-panel">
+      <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
+      <div class="user-form">
+        <h3 class="form-title">Dades de Compra</h3>
+        <input v-model="userData.name" type="text" placeholder="Nom" class="input-field" />
+        <input v-model="userData.surname" type="text" placeholder="Cognom" class="input-field" />
+        <input v-model="userData.email" type="email" placeholder="Adreça electrònica" class="input-field" />
+        <input v-model="userData.phone" type="text" placeholder="Telèfon" class="input-field" />
+      </div>
+      <div class="buttons">
+        <button @click="confirmPurchase" class="btn buy">Comprar Entrades</button>
+        <button @click="clearSelection" class="btn clear">Netejar selecció</button>
+      </div>
+      <p class="purchase-summary">
+        Has seleccionat <span id="count">{{ selectedSeats.length }}</span> butaques<br>per un preu total de
+        <span id="total">{{ totalPrice }}</span> €
+      </p>
     </div>
   </div>
 </template>
@@ -81,55 +77,41 @@ const props = defineProps({
     required: true
   }
 })
-
-// Generem les files de la sala.
-// Si la fila és "F", i la sessió té VIP, el tipus serà VIP; en cas contrari, Normal.
-const rowLetters = ['A','B','C','D','E','F','G','H','I','J','K','L']
+const rowLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 const patiRows = ref(rowLetters.map(letter => ({
   letter,
   seats: Array.from({ length: 10 }, (_, i) => ({
-    id: `p-${letter}-${i + 1}`, 
+    id: `p-${letter}-${i + 1}`,
     row: letter,
     number: i + 1,
     status: 'Disponible',
     type: letter === 'F' ? 'VIP' : 'Normal'
   }))
 })))
-
 onMounted(async () => {
   try {
     const sessionResult = await CommunicationManager.getSessionDetails(props.sessionId)
-    if (sessionResult.error) {
-      throw new Error(sessionResult.error)
-    }
+    if (sessionResult.error) throw new Error(sessionResult.error)
     const session = sessionResult.session
     if (session && session.is_discount_day !== undefined) {
       isDiscountDay.value = Boolean(Number(session.is_discount_day))
-    } else {
-      console.warn("No s'ha trobat la informació de descompte en la sessió")
     }
-
     const seatsResult = await CommunicationManager.getSeats(props.sessionId)
-    if (seatsResult.error) {
-      throw new Error(seatsResult.error)
-    }
+    if (seatsResult.error) throw new Error(seatsResult.error)
     const seatsData = seatsResult.seats
     seatsData.forEach(dbSeat => {
       const row = patiRows.value.find(r => r.letter === dbSeat.row)
       if (row) {
         const seat = row.seats.find(s => s.number === dbSeat.number)
         if (seat) {
-          seat.status = dbSeat.status   
-          if (dbSeat.type) {
-            seat.type = dbSeat.type
-          }
+          seat.status = dbSeat.status
+          if (dbSeat.type) seat.type = dbSeat.type
         }
       }
     })
   } catch (err) {
     console.error("Error carregant seients:", err)
   }
-
   const storedUser = localStorage.getItem('user')
   if (storedUser) {
     const parsedUser = JSON.parse(storedUser)
@@ -139,27 +121,18 @@ onMounted(async () => {
     userData.value.phone = parsedUser.phone || ''
   }
 })
-
 const selectedSeats = ref([])
-
 const totalPrice = computed(() => {
   return selectedSeats.value.reduce((acc, seat) => {
-    if (isDiscountDay.value) {
-      return acc + (seat.row === 'F' ? 6 : 4)
-    } else {
-      return acc + (seat.row === 'F' ? 8 : 6)
-    }
+    return isDiscountDay.value ? acc + (seat.row === 'F' ? 6 : 4) : acc + (seat.row === 'F' ? 8 : 6)
   }, 0)
 })
-
 const userData = ref({ name: '', surname: '', email: '', phone: '' })
 const errorMessage = ref('')
 const successMessage = ref('')
-
 function isSelected(seat) {
   return selectedSeats.value.some(s => s.row === seat.row && s.number === seat.number)
 }
-
 function toggleSeatSelection(seat) {
   if (seat.status === 'Ocupada') return
   if (isSelected(seat)) {
@@ -170,7 +143,6 @@ function toggleSeatSelection(seat) {
     showErrorMessage('Només pots seleccionar 10 butaques.')
   }
 }
-
 async function confirmPurchase() {
   if (selectedSeats.value.length === 0) {
     showErrorMessage('Selecciona almenys una butaca.')
@@ -180,7 +152,6 @@ async function confirmPurchase() {
     showErrorMessage('Si us plau, omple totes les dades personals.')
     return
   }
-  
   const ticketsResult = await CommunicationManager.getTickets(userData.value.email)
   if (ticketsResult.error) {
     showErrorMessage(ticketsResult.error)
@@ -191,7 +162,6 @@ async function confirmPurchase() {
     showErrorMessage('Ja tens entrades per aquesta sessió.')
     return
   }
-  
   try {
     const purchaseData = {
       email: userData.value.email,
@@ -207,9 +177,7 @@ async function confirmPurchase() {
     showSuccessMessage('Entrades comprades correctament! Rebràs el tiquet per correu.')
     patiRows.value.forEach(row => {
       row.seats.forEach(seat => {
-        if (isSelected(seat)) {
-          seat.status = 'Ocupada'
-        }
+        if (isSelected(seat)) seat.status = 'Ocupada'
       })
     })
     selectedSeats.value = []
@@ -218,23 +186,19 @@ async function confirmPurchase() {
     console.error(err)
   }
 }
-
 function clearSelection() {
   selectedSeats.value = []
   errorMessage.value = ''
 }
-
 function showErrorMessage(message) {
   errorMessage.value = message
   setTimeout(() => { errorMessage.value = '' }, 5000)
 }
-
 function showSuccessMessage(message) {
   successMessage.value = message
   setTimeout(() => { successMessage.value = '' }, 5000)
 }
 </script>
-
 
 <style scoped>
 @import url("https://fonts.googleapis.com/css?family=Montserrat&display=swap");
@@ -242,45 +206,63 @@ function showSuccessMessage(message) {
 
 .cinema {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  gap: 2rem;
   margin: 2rem auto;
-  max-width: 800px;
+  max-width: 1200px;
   font-family: 'Roboto', sans-serif;
+}
+
+.left-panel {
+  flex: 2;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.right-panel {
+  flex: 1;
+  background-color: #f7f7f7;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #333;
 }
 
 .showcase {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   list-style-type: none;
-  background: rgba(0,0,0,0.1);
-  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
   border-radius: 5px;
   color: #777;
-  width: 100%;
-  max-width: 650px;
-  margin-bottom: 10px;
+  margin-bottom: 1rem;
 }
 
 .showcase li {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 0 10px;
-}
-
-.showcase li small {
-  margin-left: 2px;
+  gap: 0.3rem;
 }
 
 .map-info {
   font-size: 0.9rem;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .pati {
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: center;
 }
@@ -295,39 +277,26 @@ function showSuccessMessage(message) {
 .pati-row {
   display: flex;
   align-items: center;
+  gap: 5px;
   margin-bottom: 5px;
 }
 
-.pati-row .row-label {
+.row-label {
   width: 20px;
   font-weight: bold;
-  margin-right: 5px;
   text-align: center;
 }
 
-.pati-row .row-seats {
+.row-seats {
   display: flex;
   gap: 3px;
-}
-
-.pati-row .seat {
-  background-color: #808080;
-  height: 25px;
-  width: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 0.7rem;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
 }
 
 .seat {
   background-color: #808080;
   height: 25px;
   width: 30px;
-  margin: 5px;
+  margin: 3px;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   display: flex;
@@ -335,6 +304,7 @@ function showSuccessMessage(message) {
   justify-content: center;
   color: #fff;
   font-size: 0.8rem;
+  transition: transform 0.2s ease;
 }
 
 .seat.selected {
@@ -356,7 +326,7 @@ function showSuccessMessage(message) {
 }
 
 p.text {
-  margin: 40px 0;
+  margin: 1rem 0;
   font-size: 1rem;
 }
 
@@ -366,34 +336,47 @@ p.text span {
 }
 
 .user-form {
-  width: 100%;
-  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #333;
 }
 
 .input-field {
   display: block;
   width: 100%;
   padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  margin-bottom: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #e50914;
+  box-shadow: 0 0 5px rgba(229, 9, 20, 0.3);
 }
 
 .buttons {
-  margin-top: 1rem;
   display: flex;
+  gap: 1rem;
   flex-wrap: wrap;
-  gap: 10px;
 }
 
 .btn {
-  padding: 0.6rem 1rem;
-  border-radius: 5px;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
   color: #fff;
   font-weight: 600;
   cursor: pointer;
   outline: none;
   border: none;
+  transition: background-color 0.3s ease;
 }
 
 .buy {
@@ -412,10 +395,29 @@ p.text span {
   background-color: #495057;
 }
 
-.img-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
+.error-message {
+  color: #dc3545;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.success-message {
+  color: #28a745;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.purchase-summary {
+  margin-top: 1rem;
+  font-size: 1rem;
+  text-align: center;
+  color: #333;
+}
+
+.seat-selection {
+  margin-top: 1rem;
+  font-size: 1rem;
+  text-align: center;
+  color: #333;
 }
 </style>

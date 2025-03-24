@@ -1,20 +1,20 @@
 <template>
   <div class="movie-container">
     <div v-if="movies.length === 0" class="loading">
-      Cargando películas...
+      Carregant pel·lícules...
     </div>
 
     <div class="search-container">
       <input 
         v-model="searchQuery" 
         type="text" 
-        placeholder="Buscar película..." 
+        placeholder="Buscar pel·lícula..." 
         class="search-bar"
       />
       <span class="search-icon">🔍</span>
     </div>
 
-    <h1 class="title">Cartelera</h1>
+    <h1 class="title">Cartellera</h1>
 
     <div class="movies-grid">
       <div v-for="(movie, index) in filteredMovies" :key="movie.id" class="movie-card">
@@ -22,7 +22,7 @@
           <div class="poster-container">
             <img 
               :src="movie.poster ? movie.poster : '/placeholder.jpg'" 
-              alt="Poster de la película" 
+              alt="Poster de la pel·lícula" 
               class="movie-poster" 
             />
             <div class="overlay">
@@ -58,8 +58,10 @@ const filteredMovies = computed(() => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+
 .movie-container {
-  background-color: #f5f5f5;
+  background-color: #f9f9f9;
   color: #333;
   padding: 40px 20px;
   min-height: 100vh;
@@ -74,35 +76,41 @@ const filteredMovies = computed(() => {
 
 .search-bar {
   width: 100%;
-  padding: 12px 20px 12px 40px;
-  border: 1px solid #ddd;
-  border-radius: 25px;
+  padding: 12px 20px 12px 45px;
+  border: 1px solid #ccc;
   font-size: 1rem;
   background-color: #fff;
+  color: #333;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.search-bar::placeholder {
+  color: #888;
+}
+
 .search-bar:focus {
-  border-color: #007bff;
-  box-shadow: 0 2px 12px rgba(0, 123, 255, 0.2);
+  border-color: #e50914;
+  box-shadow: 0 2px 12px rgba(229, 9, 20, 0.2);
   outline: none;
 }
 
 .search-icon {
   position: absolute;
-  left: 10px;
+  left: 15px;
   top: 50%;
   transform: translateY(-50%);
-  color: #888;
+  font-size: 1.2rem;
+  color: #e50914;
 }
 
 .title {
-  font-size: 2.5rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 3rem;
   font-weight: 700;
   text-align: center;
   margin-bottom: 40px;
-  color: #222;
+  color: black;
 }
 
 .movies-grid {
@@ -122,7 +130,7 @@ const filteredMovies = computed(() => {
 
 .movie-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .poster-container {
@@ -140,7 +148,7 @@ const filteredMovies = computed(() => {
 }
 
 .movie-card:hover .movie-poster {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .overlay {
@@ -162,18 +170,19 @@ const filteredMovies = computed(() => {
 }
 
 .btn-buy-ticket {
-  padding: 10px 20px;
-  background-color: #007bff;
+  padding: 12px 25px;
+  background-color: #e50914;
   color: #fff;
   border: none;
-  border-radius: 25px;
+  border-radius: 30px;
   font-size: 1rem;
+  font-family: 'Oswald', sans-serif;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .btn-buy-ticket:hover {
-  background-color: #0056b3;
+  background-color: #b00610;
 }
 
 .movie-info {
@@ -181,23 +190,40 @@ const filteredMovies = computed(() => {
   text-align: left;
 }
 
-.movie-info h3 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: #222;
+.movie-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.movie-link:hover,
+.movie-link:focus {
+  text-decoration: none;
 }
 
 .movie-description {
   font-size: 0.95rem;
   color: #666;
   line-height: 1.5;
+  text-decoration: none;
+}
+
+.movie-link:hover .movie-description {
+  text-decoration: none;
+
+}
+
+.movie-info h3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #333;
 }
 
 .loading {
   font-size: 1.2rem;
   text-align: center;
-  color: #007bff;
+  color: #e50914;
   margin-top: 50px;
 }
 </style>

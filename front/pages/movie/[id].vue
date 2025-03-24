@@ -4,7 +4,7 @@
       <div class="poster-container">
         <img 
           :src="movie.poster ? movie.poster : '/placeholder.jpg'" 
-          alt="Poster de la película" 
+          alt="Poster de la pel·lícula" 
           class="movie-poster" 
         />
       </div>
@@ -118,13 +118,13 @@ onMounted(async () => {
 }
 
 .movie-meta strong {
-  color: #007bff;
+  color: #e50914;
 }
 
 .btn-buy-ticket {
   align-self: flex-start;
   padding: 12px 24px;
-  background-color: #007bff;
+  background-color: #e50914;
   color: #fff;
   border: none;
   border-radius: 25px;
@@ -134,12 +134,12 @@ onMounted(async () => {
 }
 
 .btn-buy-ticket:hover {
-  background-color: #0056b3;
+  background-color: #aa0d0d;
 }
 
 .loading {
   text-align: center;
   font-size: 1.2rem;
-  color: #007bff;
+  color: #e50914;
 }
 </style>

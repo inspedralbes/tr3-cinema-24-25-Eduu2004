@@ -1,16 +1,20 @@
 <template>
-  <div>
+  <div class="app-container">
     <header>
       <nav>
-        <NuxtLink to="/">Inicio</NuxtLink>
-        <NuxtLink to="/sessions">Ver Sesiones</NuxtLink>
-        <NuxtLink to="/tickets">Entradas</NuxtLink>
-        <template v-if="!token">
-          <NuxtLink to="/auth">Login / Registro</NuxtLink>
-        </template>
-        <template v-else>
-          <button @click="logout">Logout</button>
-        </template>
+        <div class="nav-left">
+          <NuxtLink to="/" class="nav-link">Inicio</NuxtLink>
+          <NuxtLink to="/sessions" class="nav-link">Ver Sesiones</NuxtLink>
+          <NuxtLink to="/tickets" class="nav-link">Entradas</NuxtLink>
+        </div>
+        <div class="nav-right">
+          <template v-if="!token">
+            <NuxtLink to="/auth" class="nav-link auth">Login / Registro</NuxtLink>
+          </template>
+          <template v-else>
+            <button @click="logout" class="logout-btn">Logout</button>
+          </template>
+        </div>
       </nav>
     </header>
     <main>
@@ -52,38 +56,103 @@ function logout() {
 </script>
 
 <style scoped>
-header {
-  background-color: #0066cc;
-  padding: 1rem;
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Roboto', sans-serif;
+  color: #eee;
+  background-color: #121212;
 }
+
+header {
+  background-color: #1c1c1c;
+  border-bottom: 2px solid #e50914;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
 nav {
   display: flex;
-  gap: 1rem;
   align-items: center;
 }
-nav a {
-  color: #fff;
+
+.nav-left {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  color: #eee;
   text-decoration: none;
+  font-weight: 500;
+  position: relative;
+  padding: 0.5rem;
+  transition: color 0.3s ease;
+  font-family: 'Oswald', sans-serif;
 }
-nav span {
-  color: #fff;
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.3rem;
+  width: 0%;
+  height: 3px;
+  background-color: #e50914;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #e50914;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.auth {
   font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background-color: #e50914;
+  color: #fff;
+  transition: background-color 0.3s ease;
 }
-nav button {
-  background-color: #fff;
-  color: #0066cc;
-  border: none;
+
+.auth:hover {
+  background-color: #b00610;
+}
+
+.logout-btn {
+  background-color: transparent;
+  color: #eee;
+  border: 1px solid #e50914;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
-main {
-  padding: 1rem;
-  min-height: calc(100vh - 160px);
+
+.logout-btn:hover {
+  background-color: #e50914;
+  color: #fff;
 }
+
 footer {
-  background-color: #f5f5f5;
+  background-color: #1c1c1c;
+  border-top: 2px solid #e50914;
   text-align: center;
-  padding: 1rem;
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+  color: #bbb;
 }
 </style>

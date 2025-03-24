@@ -41,18 +41,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { fetchMovies } from '@/stores/communicationManager'
 
 const movies = ref([])
 const searchQuery = ref("")
 
 onMounted(async () => {
-  try {
-    const moviesRes = await fetch('http://localhost:8000/api/movies')
-    const data = await moviesRes.json()
-    movies.value = data.movies || []
-  } catch (error) {
-    console.error('Error cargando películas:', error)
-  }
+  movies.value = await fetchMovies()
 })
 
 const filteredMovies = computed(() => {

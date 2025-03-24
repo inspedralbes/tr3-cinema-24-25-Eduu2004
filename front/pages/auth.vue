@@ -20,15 +20,15 @@
                     Crea un compte nou
                   </h5><br><br>
 
-                  <form v-if="!isRegister" @submit.prevent="login">
+                  <!-- Canviem @submit per a loginUser -->
+                  <form v-if="!isRegister" @submit.prevent="loginUser">
                     <div class="form-outline mb-4">
                       <input type="email" class="form-control form-control-lg" v-model="loginForm.email" required />
                       <label class="form-label">Correu electrònic</label>
                     </div>
 
                     <div class="form-outline mb-4">
-                      <input type="password" class="form-control form-control-lg" v-model="loginForm.password"
-                        required />
+                      <input type="password" class="form-control form-control-lg" v-model="loginForm.password" required />
                       <label class="form-label">Contrasenya</label>
                     </div>
 
@@ -46,15 +46,15 @@
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
 
-                  <form v-else @submit.prevent="register">
+                  <!-- Canviem @submit per a registerUser -->
+                  <form v-else @submit.prevent="registerUser">
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.name" required />
                       <label class="form-label">Nom</label>
                     </div>
 
                     <div class="form-outline mb-4">
-                      <input type="text" class="form-control form-control-lg" v-model="registerForm.lastname"
-                        required />
+                      <input type="text" class="form-control form-control-lg" v-model="registerForm.lastname" required />
                       <label class="form-label">Cognom</label>
                     </div>
 
@@ -64,14 +64,12 @@
                     </div>
 
                     <div class="form-outline mb-4">
-                      <input type="password" class="form-control form-control-lg" v-model="registerForm.password"
-                        required />
+                      <input type="password" class="form-control form-control-lg" v-model="registerForm.password" required />
                       <label class="form-label">Contrasenya</label>
                     </div>
 
                     <div class="form-outline mb-4">
-                      <input type="password" class="form-control form-control-lg"
-                        v-model="registerForm.password_confirmation" required />
+                      <input type="password" class="form-control form-control-lg" v-model="registerForm.password_confirmation" required />
                       <label class="form-label">Confirma la contrasenya</label>
                     </div>
 
@@ -113,6 +111,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useState } from '#app'
+import { login, register } from '@/stores/communicationManager'
 
 const router = useRouter()
 
@@ -138,59 +137,27 @@ const registerError = ref('')
 const token = useState('token', () => null)
 const user = useState('user', () => null)
 
-async function login() {
+async function loginUser() {
   loginError.value = ''
-  try {
-    const res = await fetch('http://localhost:8000/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(loginForm.value)
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      loginError.value = data.message || 'Error en iniciar sessió'
-      return
-    }
-    localStorage.setItem('access_token', data.data.access_token)
-    localStorage.setItem('user', JSON.stringify(data.data.user))
-    token.value = data.data.access_token
-    user.value = data.data.user
-    console.log('Sessió iniciada correctament', data)
-    router.push('/')
-  } catch (err) {
-    loginError.value = 'S\'ha produït un error'
-    console.error(err)
+  const result = await login(loginForm.value, router)
+  if (result.error) {
+    loginError.value = result.error
+  } else {
+    token.value = result.token
+    user.value = result.user
+    console.log('Sessió iniciada correctament', result)
   }
 }
 
-async function register() {
+async function registerUser() {
   registerError.value = ''
-  try {
-    const res = await fetch('http://localhost:8000/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(registerForm.value)
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      registerError.value = data.message || 'Error en registrar-se'
-      return
-    }
-    console.log('Registre realitzat correctament', data)
-    localStorage.setItem('access_token', data.data.access_token)
-    localStorage.setItem('user', JSON.stringify(data.data.user))
-    token.value = data.data.access_token
-    user.value = data.data.user
-    router.push('/')
-  } catch (err) {
-    registerError.value = 'S\'ha produït un error'
-    console.error(err)
+  const result = await register(registerForm.value, router)
+  if (result.error) {
+    registerError.value = result.error
+  } else {
+    token.value = result.token
+    user.value = result.user
+    console.log('Registre realitzat correctament', result)
   }
 }
 

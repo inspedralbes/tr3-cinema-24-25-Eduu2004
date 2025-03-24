@@ -23,17 +23,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import CommunicationManager from '@/stores/communicationManager' 
+
 
 const sessions = ref([])
 
 onMounted(async () => {
-  try {
-    const sessionsRes = await fetch('http://localhost:8000/api/sessions')
-    const data = await sessionsRes.json()
-    sessions.value = data.sessions || []
-  } catch (error) {
-    console.error('Error cargando sesiones:', error)
-  }
+  sessions.value = await CommunicationManager.fetchSessions()
 })
 
 function formatDate(dateString) {

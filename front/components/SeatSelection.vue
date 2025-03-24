@@ -98,12 +98,9 @@ const patiRows = ref(rowLetters.map(letter => ({
 
 onMounted(async () => {
   try {
-    // Primer, obtenim els detalls de la sessió per recuperar is_discount_day
     const sessionRes = await fetch(`http://localhost:8000/api/sessions/${props.sessionId}`)
     if (!sessionRes.ok) throw new Error("Error al carregar la sessió")
     const sessionData = await sessionRes.json()
-    // Assegura't d'accedir a la propietat correcta segons l'estructura de la resposta.
-    // Suposant que la resposta és { message: 'Sessió trobada', data: { session: { ... } } }
     const session = sessionData.data && sessionData.data.session ? sessionData.data.session : sessionData.session
     if (session && session.is_discount_day !== undefined) {
       isDiscountDay.value = Boolean(Number(session.is_discount_day))

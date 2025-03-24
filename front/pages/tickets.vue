@@ -1,25 +1,16 @@
 <template>
   <div class="consulta-entrades">
     <h1>Consulta d'Entrades Comprades</h1>
-    
-    <!-- Formulario de búsqueda -->
+
     <form @submit.prevent="getTickets" class="form-container">
-      <input
-        id="email"
-        type="email"
-        v-model="email"
-        placeholder="Introduïu el teu correu electrònic"
-        required
-        class="input-field"
-      />
+      <input id="email" type="email" v-model="email" placeholder="Introduïu el teu correu electrònic" required
+        class="input-field" />
       <button type="submit" class="btn">Buscar</button>
     </form>
 
-    <!-- Mensajes de carga y error -->
     <div v-if="loading" class="loading">Carregant...</div>
     <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
 
-    <!-- Lista de sesiones -->
     <div v-if="Object.keys(groupedSessions).length">
       <h2>Sessions Futures amb Entrades Comprades</h2>
       <ul class="sessions-list">
@@ -33,12 +24,10 @@
       </ul>
     </div>
 
-    <!-- Mensaje si no hay entradas -->
     <div v-else-if="!loading && !errorMessage" class="no-entries">
-      ❌ No s'han trobat entrades per aquest correu.
+      Buscant correu electrònic...
     </div>
 
-    <!-- Detalles de la sesión seleccionada -->
     <div v-if="selectedSession" class="session-details">
       <h3>Detalls de la Sessió</h3>
       <p><strong>Pel·lícula:</strong> {{ selectedSession.movie?.title || 'No disponible' }}</p>
@@ -48,7 +37,7 @@
       <h4>Entrades Comprades</h4>
       <ul class="tickets-list">
         <li v-for="ticket in groupedSessions[selectedSession.id]" :key="ticket.id">
-          🎟️ Seient: 
+          🎟️ Seient:
           <span v-for="seat in ticket.seats" :key="seat.row + '-' + seat.number">
             {{ seat.row }}{{ seat.number }}
           </span>
@@ -69,7 +58,6 @@ const errorMessage = ref('')
 const loading = ref(false)
 const selectedSession = ref(null)
 
-// Obtener tickets por correo
 async function getTickets() {
   loading.value = true
   errorMessage.value = ''
@@ -89,7 +77,6 @@ async function getTickets() {
   }
 }
 
-// Agrupar tickets por sesión
 const groupedSessions = computed(() => {
   const groups = {}
   tickets.value.forEach(ticket => {
@@ -104,7 +91,6 @@ const groupedSessions = computed(() => {
   return groups
 })
 
-// Seleccionar sesión
 function selectSession(sessionId) {
   const group = groupedSessions.value[sessionId]
   if (group && group.length > 0) {
@@ -112,13 +98,11 @@ function selectSession(sessionId) {
   }
 }
 
-// Formatear fecha
 function formatDate(dateString) {
   if (!dateString) return ''
   return format(parseISO(dateString), 'dd/MM/yyyy')
 }
 
-// Formatear hora
 function formatTime(timeString) {
   if (!timeString) return ''
   return timeString.slice(0, 5)

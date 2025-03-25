@@ -111,10 +111,6 @@ nav {
   transition: width 0.3s ease;
 }
 
-.nav-link:hover {
-  color: #e50914;
-}
-
 .nav-link:hover::after {
   width: 100%;
 }
@@ -143,7 +139,7 @@ nav {
 }
 
 .logout-btn:hover {
-  background-color: #e50914;
+  background-color: #eee;
   color: #fff;
 }
 

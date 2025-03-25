@@ -109,7 +109,6 @@ async function getMovieDetails(movieId) {
   }
 }
 
-// Mètode per obtenir la sessió (que conté informació com is_discount_day)
 async function getSessionDetails(sessionId) {
   try {
     const res = await fetch(`${LARAVEL_URL}sessions/${sessionId}`);
@@ -117,7 +116,6 @@ async function getSessionDetails(sessionId) {
       throw new Error("Error al carregar la sessió");
     }
     const data = await res.json();
-    // Suposem que la resposta és de la forma { data: { session: {...} } }
     const session = data.data && data.data.session ? data.data.session : data.session;
     return { session };
   } catch (error) {
@@ -126,7 +124,6 @@ async function getSessionDetails(sessionId) {
   }
 }
 
-// Mètode per obtenir els seients d'una sessió
 async function getSeats(sessionId) {
   try {
     const res = await fetch(`${LARAVEL_URL}sessions/${sessionId}/seats`);
@@ -141,7 +138,6 @@ async function getSeats(sessionId) {
   }
 }
 
-// Mètode per realitzar la compra d'entrades
 async function purchaseTickets(purchaseData) {
   try {
     const res = await fetch(`${LARAVEL_URL}tickets/purchase`, {
@@ -165,7 +161,6 @@ async function purchaseTickets(purchaseData) {
 
 const goToSession = () => {
   if (sessionId.value) {
-    // Usar vue-router para cambiar la ruta sin recargar la página
     router.push(`/sessions/${sessionId.value}`);
   }
 }

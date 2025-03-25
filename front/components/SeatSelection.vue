@@ -62,6 +62,20 @@
         Has seleccionat <span id="count">{{ selectedSeats.length }}</span> butaques<br>per un preu total de
         <span id="total">{{ totalPrice }}</span> €
       </p>
+
+      <div class="selected-seats-list">
+        <h4>Seients seleccionats:</h4>
+        <ul>
+          <li v-for="(seat, index) in selectedSeats" :key="index" class="seat-item">
+            <span class="seat-info">Fila {{ seat.row }} - Butaca {{ seat.number }}</span>
+            <span class="price">
+              {{ seatPrice(seat) }} €
+            </span>
+          </li>
+        </ul>
+      </div>
+
+
     </div>
   </div>
 </template>
@@ -198,11 +212,53 @@ function showSuccessMessage(message) {
   successMessage.value = message
   setTimeout(() => { successMessage.value = '' }, 5000)
 }
+function seatPrice(seat) {
+  if (isDiscountDay.value) {
+    return seat.row === 'F' ? 6 : 4;
+  } else {
+    return seat.row === 'F' ? 8 : 6;
+  }
+}
+
 </script>
 
 <style scoped>
 @import url("https://fonts.googleapis.com/css?family=Montserrat&display=swap");
 @import url("https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css");
+
+.selected-seats-list {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+.selected-seats-list h4 {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.selected-seats-list ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.selected-seats-list .seat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.selected-seats-list .seat-info {
+  flex: 1;
+}
+
+.selected-seats-list .price {
+  font-weight: bold;
+  color: #007bff;
+  text-align: right;
+}
 
 .cinema {
   display: flex;

@@ -163,6 +163,15 @@ async function purchaseTickets(purchaseData) {
   }
 }
 
+const goToSession = () => {
+  if (sessionId.value) {
+    // Usar vue-router para cambiar la ruta sin recargar la página
+    router.push(`/sessions/${sessionId.value}`);
+  }
+}
+
+
+
 export default {
   fetchMovies,
   fetchSessions,
@@ -173,4 +182,5 @@ export default {
   getSessionDetails,
   getSeats,
   purchaseTickets,
+  goToSession
 };

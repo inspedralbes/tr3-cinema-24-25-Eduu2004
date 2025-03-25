@@ -2,11 +2,8 @@
   <div class="movie-container">
     <div v-if="movie" class="movie-details">
       <div class="poster-container">
-        <img 
-          :src="movie.poster ? movie.poster : '/placeholder.jpg'" 
-          alt="Poster de la pel·lícula" 
-          class="movie-poster" 
-        />
+        <img :src="movie.poster ? movie.poster : '/placeholder.jpg'" alt="Poster de la pel·lícula"
+          class="movie-poster" />
       </div>
 
       <div class="info-container">
@@ -18,7 +15,12 @@
           <p><strong>⏳ Duración:</strong> {{ movie.runtime }} minutos</p>
         </div>
 
-        <button class="btn-buy-ticket">Comprar Entrada</button>
+        <button v-if="hasSession" @click="goToSession" class="btn-buy-ticket">
+          Comprar Entrada
+        </button>
+        <p v-else class="no-session-msg">
+          No hi ha sessió disponible per a aquesta pel·lícula
+        </p>
       </div>
     </div>
 
@@ -30,25 +32,47 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import CommunicationManager from '@/stores/communicationManager'
 
 const movie = ref(null)
+const sessionId = ref(null)
+const hasSession = ref(false)
 const route = useRoute()
+const router = useRouter()
 
 onMounted(async () => {
-  const movieId = route.params.id  
+  const movieId = route.params.id
+
+  if (!movieId) {
+    throw new Error('Movie ID is missing')
+  }
+
   try {
     const result = await CommunicationManager.getMovieDetails(movieId)
-    if (result.error) {
-      throw new Error(result.error)
-    }
+    if (result.error) throw new Error(result.error)
     movie.value = result.movie
+
+    const sessions = await CommunicationManager.fetchSessions()
+    const session = sessions.find(session => session.movie_id === Number(movieId))
+
+    if (session) {
+      sessionId.value = session.id
+      hasSession.value = true
+    }
   } catch (error) {
     console.error('Error cargando detalles de la película:', error)
   }
 })
+
+const goToSession = () => {
+  if (sessionId.value) {
+    router.push(`/sessions/${sessionId.value}`);
+
+  }
+}
 </script>
+
 
 <style scoped>
 .movie-container {
@@ -135,6 +159,16 @@ onMounted(async () => {
 
 .btn-buy-ticket:hover {
   background-color: #aa0d0d;
+}
+
+.no-session-msg {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #e50914;
+  background-color: #ffe5e5;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
 }
 
 .loading {

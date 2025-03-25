@@ -138,11 +138,6 @@ nav {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.logout-btn:hover {
-  background-color: #eee;
-  color: #fff;
-}
-
 footer {
   background-color: #1c1c1c;
   border-top: 2px solid #e50914;

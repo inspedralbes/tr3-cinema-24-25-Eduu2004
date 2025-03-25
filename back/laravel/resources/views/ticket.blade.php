@@ -63,30 +63,10 @@
             margin-bottom: 20px;
         }
 
-        .circle-left, .circle-right {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #333;
-            border-radius: 50%;
-            background: #f8f3e8;
-            position: absolute;
-        }
-        .circle-left {
-            top: 50%;
-            left: -11px; 
-            transform: translateY(-50%);
-        }
-        .circle-right {
-            top: 50%;
-            right: -11px; 
-            transform: translateY(-50%);
-        }
     </style>
 </head>
 <body>
     <div class="ticket">
-        <div class="circle-left"></div>
-        <div class="circle-right"></div>
 
         <div class="ticket-left">
             <div class="movie-title">

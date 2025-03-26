@@ -20,7 +20,7 @@
                     Crea un compte nou
                   </h5><br><br>
 
-                  <!-- Utilitzem loginUser per al formulari d'inici de sessió -->
+                  <!-- Formulario de inicio de sesión -->
                   <form v-if="!isRegister" @submit.prevent="loginUser">
                     <div class="form-outline mb-4">
                       <input type="email" class="form-control form-control-lg" v-model="loginForm.email" required />
@@ -46,7 +46,7 @@
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
 
-                  <!-- Utilitzem registerUser per al formulari de registre -->
+                  <!-- Formulario de registro -->
                   <form v-else @submit.prevent="registerUser">
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.name" required />
@@ -112,6 +112,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useState } from '#app'
 import CommunicationManager from '@/stores/communicationManager'
+import { useReCaptcha } from 'vue-recaptcha-v3'
 
 const router = useRouter()
 
@@ -137,27 +138,73 @@ const registerError = ref('')
 const token = useState('token', () => null)
 const user = useState('user', () => null)
 
-async function loginUser() {
-  loginError.value = ''
-  const result = await CommunicationManager.login(loginForm.value, router)
-  if (result.error) {
-    loginError.value = result.error
-  } else {
-    token.value = result.token
-    user.value = result.user
-    console.log('Sessió iniciada correctament', result)
-  }
-}
+const { executeRecaptcha } = useReCaptcha()
 
 async function registerUser() {
   registerError.value = ''
-  const result = await CommunicationManager.register(registerForm.value, router)
-  if (result.error) {
-    registerError.value = result.error
-  } else {
-    token.value = result.token
-    user.value = result.user
-    console.log('Registre realitzat correctament', result)
+
+  try {
+    // Ejecutar reCAPTCHA para obtener el token
+    const recaptchaToken = await executeRecaptcha('register')
+
+    const result = await CommunicationManager.register({
+      ...registerForm.value,
+      recaptcha: recaptchaToken
+    }, router)
+
+    if (result.error) {
+      registerError.value = result.error
+    } else {
+      console.log('Registro exitoso', result)
+
+      // Guardar el token y el usuario en localStorage
+      localStorage.setItem('access_token', result.token)
+      localStorage.setItem('user', JSON.stringify(result.user))
+
+      // Actualizar el estado reactivo
+      token.value = result.token
+      user.value = result.user
+
+      // Redirigir a la página principal
+      router.push('/')
+    }
+  } catch (error) {
+    console.error('Error al registrarse:', error)
+    registerError.value = "Error al registrarse"
+  }
+}
+
+async function loginUser() {
+  loginError.value = ''
+
+  try {
+    // Ejecutar reCAPTCHA para obtener el token
+    const recaptchaToken = await executeRecaptcha('login')
+
+    const result = await CommunicationManager.login({
+      ...loginForm.value,
+      recaptcha: recaptchaToken
+    }, router)
+
+    if (result.error) {
+      loginError.value = result.error
+    } else {
+      console.log('Sesión iniciada correctamente', result)
+
+      // Guardar el token y el usuario en localStorage
+      localStorage.setItem('access_token', result.token)
+      localStorage.setItem('user', JSON.stringify(result.user))
+
+      // Actualizar el estado reactivo
+      token.value = result.token
+      user.value = result.user
+
+      // Redirigir a la página principal
+      router.push('/')
+    }
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error)
+    loginError.value = "Error al iniciar sesión"
   }
 }
 
@@ -167,20 +214,39 @@ function toggleForm() {
 </script>
 
 <style scoped>
+/* Estilos de la página de login y registro */
 .vh-100 {
-  height: 100vh;
+  min-height: 100vh;
 }
 
-.card {
+.card-body {
+  background-color: #fff;
   border-radius: 1rem;
 }
 
-.img-fluid.fixed-img {
-  height: 100vh;
-  width: 300vh;
+.fixed-img {
+  width: 100%;
+  border-top-left-radius: 1rem;
+  border-bottom-left-radius: 1rem;
 }
 
-.text-danger {
-  color: red;
+.form-outline {
+  margin-bottom: 2rem;
+}
+
+.form-control {
+  border-radius: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 20px;
+}
+
+.btn {
+  width: 100%;
+}
+
+.text-black {
+  color: #000;
 }
 </style>

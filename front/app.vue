@@ -8,9 +8,11 @@
           <NuxtLink to="/tickets" class="nav-link">Consulta d'Entrades</NuxtLink>
         </div>
         <div class="nav-right">
+          <!-- Muestra el botón de login/register si no hay token -->
           <template v-if="!token">
             <NuxtLink to="/auth" class="nav-link auth">Login / Registre</NuxtLink>
           </template>
+          <!-- Muestra el botón de logout si hay token -->
           <template v-else>
             <button @click="logout" class="logout-btn">Logout</button>
           </template>
@@ -35,23 +37,27 @@ const user = useState('user', () => null)
 const token = useState('token', () => null)
 const router = useRouter()
 
+// Recuperar el token y el user desde el localStorage cuando el componente se monta
 onMounted(() => {
   const storedToken = localStorage.getItem('access_token')
   const storedUser = localStorage.getItem('user')
+
   if (storedToken) {
-    token.value = storedToken
+    token.value = storedToken  // Asignamos el token desde localStorage
   }
+
   if (storedUser) {
-    user.value = JSON.parse(storedUser)
+    user.value = JSON.parse(storedUser)  // Asignamos el usuario desde localStorage
   }
 })
 
+// Función para hacer logout
 function logout() {
   localStorage.removeItem('user')
   localStorage.removeItem('access_token')
   user.value = null
   token.value = null
-  router.push('/auth')
+  router.push('/auth')  // Redirigir a la página de login
 }
 </script>
 

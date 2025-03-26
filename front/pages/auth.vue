@@ -12,7 +12,6 @@
               </div>
               <div class="col-md-6 col-lg-7 d-flex align-items-center">
                 <div class="card-body p-4 p-lg-5 text-black">
-
                   <h5 class="h1 fw-bold mb-0" style="letter-spacing: 1px;" v-if="!isRegister">
                     Inicia sessió al teu compte
                   </h5>
@@ -46,12 +45,10 @@
                         Inicia sessió
                       </button>
                     </div>
-
                     <p class="mb-5 pb-lg-2" style="color: #393f81;">
                       No tens compte?
                       <a href="#" style="color: #393f81;" @click.prevent="toggleForm">Registra't aquí</a>
                     </p>
-
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
 
@@ -61,27 +58,22 @@
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.name" required />
                       <label class="form-label">Nom</label>
                     </div>
-
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.lastname" required />
                       <label class="form-label">Cognom</label>
                     </div>
-
                     <div class="form-outline mb-4">
                       <input type="email" class="form-control form-control-lg" v-model="registerForm.email" required />
                       <label class="form-label">Correu electrònic</label>
                     </div>
-
                     <div class="form-outline mb-4">
                       <input type="password" class="form-control form-control-lg" v-model="registerForm.password" required />
                       <label class="form-label">Contrasenya</label>
                     </div>
-
                     <div class="form-outline mb-4">
                       <input type="password" class="form-control form-control-lg" v-model="registerForm.password_confirmation" required />
                       <label class="form-label">Confirma la contrasenya</label>
                     </div>
-
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.phone" />
                       <label class="form-label">Telèfon</label>
@@ -101,12 +93,10 @@
                         Registra't
                       </button>
                     </div>
-
                     <p class="mb-5 pb-lg-2" style="color: #393f81;">
                       Ja tens compte?
                       <a href="#" style="color: #393f81;" @click.prevent="toggleForm">Inicia sessió aquí</a>
                     </p>
-
                     <div v-if="registerError" class="text-danger mt-2">{{ registerError }}</div>
                   </form>
 
@@ -126,18 +116,19 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useState, useRuntimeConfig } from '#app'
+import { useState } from '#app'
 import CommunicationManager from '@/stores/communicationManager'
-import ReCaptcha from '../components/ReCaptcha.vue' // Corregido espacio en la ruta
+import ReCaptcha from '../components/ReCaptcha.vue'
 
 const router = useRouter()
 const config = useRuntimeConfig()
 
+// States
 const isRegister = ref(false)
 
-// Formularis
+// Formularios
 const loginForm = ref({
   email: '',
   password: ''
@@ -152,23 +143,34 @@ const registerForm = ref({
   phone: ''
 })
 
-// Refs pels ReCaptcha
+// Refs para ReCaptcha
 const loginRecaptchaRef = ref(null)
 const registerRecaptchaRef = ref(null)
 
-// Variables pels tokens d'error
+// Variables para los errores
 const loginRecaptchaToken = ref('')
 const registerRecaptchaToken = ref('')
 const loginCaptchaError = ref('')
 const registerCaptchaError = ref('')
 
-// Errors
+// Errores de login y registro
 const loginError = ref('')
 const registerError = ref('')
 
-// Estat global
+// Global state for user and token
 const token = useState('token', () => null)
 const user = useState('user', () => null)
+
+// Recuperar datos del localStorage al montar el componente
+onMounted(() => {
+  const storedToken = localStorage.getItem('access_token')
+  const storedUser = localStorage.getItem('user')
+
+  if (storedToken && storedUser) {
+    token.value = storedToken
+    user.value = JSON.parse(storedUser)
+  }
+})
 
 async function loginUser() {
   loginError.value = ''
@@ -185,14 +187,29 @@ async function loginUser() {
       recaptchaToken: loginRecaptchaToken.value
     })
 
+    console.log('Respuesta del servidor de login:', result)
+
     if (result.error) {
       loginError.value = result.error
       loginRecaptchaRef.value?.reset()
       loginRecaptchaToken.value = ''
     } else {
-      token.value = result.token
-      user.value = result.user
-      router.push('/')
+      const { access_token, user } = result.data
+
+      if (access_token && user) {
+        // Guardamos en localStorage
+        localStorage.setItem('access_token', access_token)
+        localStorage.setItem('user', JSON.stringify(user))
+
+        // Actualizamos el estado global (token y user)
+        token.value = access_token
+        user.value = user
+
+        // Redirigimos al usuario
+        router.push('/')
+      } else {
+        loginError.value = 'Error: La respuesta no contiene información de usuario.'
+      }
     }
   } catch (error) {
     loginError.value = 'Error en la connexió amb el servidor'
@@ -215,14 +232,26 @@ async function registerUser() {
       recaptchaToken: registerRecaptchaToken.value
     })
 
+    console.log('Respuesta del servidor de register:', result)
+
     if (result.error) {
       registerError.value = result.error
       registerRecaptchaRef.value?.reset()
       registerRecaptchaToken.value = ''
     } else {
-      token.value = result.token
-      user.value = result.user
-      router.push('/')
+      const { access_token, user } = result.data
+
+      if (access_token && user) {
+        localStorage.setItem('access_token', access_token)
+        localStorage.setItem('user', JSON.stringify(user))
+
+        token.value = access_token
+        user.value = user
+
+        router.push('/')
+      } else {
+        registerError.value = 'Error: La respuesta no contiene información de usuario.'
+      }
     }
   } catch (error) {
     registerError.value = 'Error en la connexió amb el servidor'
@@ -233,11 +262,11 @@ async function registerUser() {
 async function toggleForm() {
   isRegister.value = !isRegister.value
   await nextTick()
-  
+
   if (!isRegister.value && loginRecaptchaRef.value) {
     await loginRecaptchaRef.value.initializeRecaptcha()
   }
-  
+
   if (isRegister.value && registerRecaptchaRef.value) {
     await registerRecaptchaRef.value.initializeRecaptcha()
   }

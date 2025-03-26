@@ -20,7 +20,7 @@
                     Crea un compte nou
                   </h5><br><br>
 
-                  <!-- Utilitzem loginUser per al formulari d'inici de sessió -->
+                  <!-- Formulario de login -->
                   <form v-if="!isRegister" @submit.prevent="loginUser">
                     <div class="form-outline mb-4">
                       <input type="email" class="form-control form-control-lg" v-model="loginForm.email" required />
@@ -31,6 +31,9 @@
                       <input type="password" class="form-control form-control-lg" v-model="loginForm.password" required />
                       <label class="form-label">Contrasenya</label>
                     </div>
+
+                    <!-- reCAPTCHA -->
+                    <div class="g-recaptcha" data-sitekey="6LfFjwArAAAAAPNtnaP1epIMDtAgMQWusJP-JqlK"></div>
 
                     <div class="pt-1 mb-4">
                       <button class="btn btn-dark btn-lg btn-block" type="submit">
@@ -46,7 +49,7 @@
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
 
-                  <!-- Utilitzem registerUser per al formulari de registre -->
+                  <!-- Formulario de registro -->
                   <form v-else @submit.prevent="registerUser">
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.name" required />
@@ -78,6 +81,9 @@
                       <label class="form-label">Telèfon</label>
                     </div>
 
+                    <!-- reCAPTCHA -->
+                    <div class="g-recaptcha" data-sitekey="6LfFjwArAAAAAPNtnaP1epIMDtAgMQWusJP-JqlK"></div>
+
                     <div class="pt-1 mb-4">
                       <button class="btn btn-dark btn-lg btn-block" type="submit">
                         Registra't
@@ -92,11 +98,6 @@
                     <div v-if="registerError" class="text-danger mt-2">{{ registerError }}</div>
                   </form>
 
-                  <div class="small text-muted" v-if="isRegister">
-                    <a href="#!">Termes d'ús.</a>
-                    <a href="#!">Política de privacitat</a>
-                  </div>
-
                 </div>
               </div>
             </div>
@@ -108,9 +109,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useState } from '#app'
 import CommunicationManager from '@/stores/communicationManager'
 
 const router = useRouter()
@@ -134,36 +134,99 @@ const registerForm = ref({
 const loginError = ref('')
 const registerError = ref('')
 
-const token = useState('token', () => null)
-const user = useState('user', () => null)
+const token = ref(null)
+const user = ref(null)
+
+onMounted(() => {
+  // Cargar el script de reCAPTCHA de Google solo una vez
+  const script = document.createElement('script')
+  script.src = 'https://www.google.com/recaptcha/api.js'
+  script.async = true
+  script.defer = true
+  
+  script.onload = () => {
+    console.log('reCAPTCHA script cargado exitosamente');
+    // Aquí puedes asegurar que el widget de reCAPTCHA está listo para usarse
+  }
+
+  document.head.appendChild(script)
+})
+
+function toggleForm() {
+  isRegister.value = !isRegister.value
+  
+  // Recargar el script de reCAPTCHA cuando cambiamos de formulario
+  loadRecaptchaScript()
+}
+
+function loadRecaptchaScript() {
+  // Eliminar el script de reCAPTCHA existente si está presente
+  const existingScript = document.querySelector('script[src="https://www.google.com/recaptcha/api.js"]')
+  if (existingScript) {
+    existingScript.remove()
+  }
+
+  // Cargar el script de reCAPTCHA
+  const script = document.createElement('script')
+  script.src = 'https://www.google.com/recaptcha/api.js'
+  script.async = true
+  script.defer = true
+  document.head.appendChild(script)
+}
 
 async function loginUser() {
   loginError.value = ''
+  
+  // Obtén el token del reCAPTCHA
+  const captchaToken = grecaptcha.getResponse()
+
+  // Verificamos si el token no es válido
+  if (!captchaToken) {
+    loginError.value = 'Por favor, verifica que no eres un robot.'
+    return
+  }
+
+  // Agregar el token al formulario de login
+  loginForm.value.recaptcha_token = captchaToken
+  
   const result = await CommunicationManager.login(loginForm.value, router)
+  
   if (result.error) {
     loginError.value = result.error
   } else {
     token.value = result.token
     user.value = result.user
-    console.log('Sessió iniciada correctament', result)
+    console.log('Sesion iniciada correctamente', result)
   }
 }
 
 async function registerUser() {
   registerError.value = ''
+  
+  // Obtén el token del reCAPTCHA
+  const captchaToken = grecaptcha.getResponse()
+  console.log("Captcha Token:", captchaToken);  // Verifica el token en la consola
+
+  // Verificamos si el token no es válido
+  if (!captchaToken || captchaToken.length === 0) {
+    registerError.value = 'Por favor, verifica que no eres un robot.'
+    return
+  }
+
+  // Agregar el token al formulario de registro
+  registerForm.value.recaptcha_token = captchaToken
+  
   const result = await CommunicationManager.register(registerForm.value, router)
+  
   if (result.error) {
     registerError.value = result.error
   } else {
     token.value = result.token
     user.value = result.user
-    console.log('Registre realitzat correctament', result)
+    console.log('Registro realizado correctamente', result)
   }
 }
 
-function toggleForm() {
-  isRegister.value = !isRegister.value
-}
 </script>
 
 <style scoped>

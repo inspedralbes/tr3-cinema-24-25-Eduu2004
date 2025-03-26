@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -17,9 +18,26 @@ class AuthController extends Controller
             'lastname'  => 'required|string|max:255',
             'email'     => 'required|string|email|max:255|unique:users',
             'password'  => 'required|string|min:6|confirmed',
-            'phone'     => 'nullable|string'
+            'phone'     => 'nullable|string',
+            'recaptcha_token' => 'required|string',  // Verifica el token de reCAPTCHA
         ]);
 
+        // Verificar el token de reCAPTCHA con Google
+        $recaptchaResponse = $request->recaptcha_token;
+        $secretKey = '6LfFjwArAAAAAHydYaAM6oQ3Go64G71jvTHMfm7Z';
+
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret'   => $secretKey,
+            'response' => $recaptchaResponse,
+        ]);
+
+        $responseBody = $response->json();
+
+        if (!$responseBody['success']) {
+            return response()->json(['message' => 'reCAPTCHA validation failed'], 400);
+        }
+
+        // Si la validación reCAPTCHA es exitosa, proceder con el registro
         $user = User::create([
             'name'      => $validated['name'],
             'lastname'  => $validated['lastname'],
@@ -28,7 +46,6 @@ class AuthController extends Controller
             'phone'     => $validated['phone'] ?? null,
         ]);
 
-        // Genera el token de acceso
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -46,8 +63,24 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'email'    => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
+            'recaptcha_token' => 'required|string',  // Verifica el token de reCAPTCHA
         ]);
+
+        // Verificar el token de reCAPTCHA con Google
+        $recaptchaResponse = $request->recaptcha_token;
+        $secretKey = '6LfFjwArAAAAAHydYaAM6oQ3Go64G71jvTHMfm7Z';
+
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret'   => $secretKey,
+            'response' => $recaptchaResponse,
+        ]);
+
+        $responseBody = $response->json();
+
+        if (!$responseBody['success']) {
+            return response()->json(['message' => 'reCAPTCHA validation failed'], 400);
+        }
 
         if (!Auth::attempt($credentials)) {
             return response()->json([

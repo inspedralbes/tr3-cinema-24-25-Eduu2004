@@ -35,8 +35,12 @@ return [
         ],
     ],
     'tmdb' => [
-    'api_key' => env('TMBD_API_KEY'),
-    'base_url' => 'https://api.themoviedb.org/3',
+        'api_key' => env('TMBD_API_KEY'),
+        'base_url' => 'https://api.themoviedb.org/3',
+    ],
+    'recaptcha' => [
+        'sitekey' => env('RECAPTCHA_SITEKEY'),
+        'secret'  => env('RECAPTCHA_SECRET'),
     ],
 
 ];

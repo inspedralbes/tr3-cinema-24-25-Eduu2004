@@ -34,9 +34,10 @@
 
                     <!-- ReCAPTCHA -->
                     <ReCaptcha 
+                      v-if="!isRegister"
                       ref="loginRecaptchaRef"
                       v-model="loginRecaptchaToken"
-                      sitekey="6Lf71wArAAAAACMOAohcU-AaUYcDu799qAlHnNUo"
+                      :sitekey="config.public.RECAPTCHA_SITE_KEY"
                     />
                     <div v-if="loginCaptchaError" class="text-danger mb-4">{{ loginCaptchaError }}</div>
 
@@ -88,9 +89,10 @@
 
                     <!-- ReCAPTCHA -->
                     <ReCaptcha
+                      v-if="isRegister"
                       ref="registerRecaptchaRef"
                       v-model="registerRecaptchaToken"
-                      sitekey="6Lf71wArAAAAACMOAohcU-AaUYcDu799qAlHnNUo"
+                      :sitekey="config.public.RECAPTCHA_SITE_KEY"
                     />
                     <div v-if="registerCaptchaError" class="text-danger mb-4">{{ registerCaptchaError }}</div>
 
@@ -124,13 +126,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useState } from '#app'
+import { useState, useRuntimeConfig } from '#app'
 import CommunicationManager from '@/stores/communicationManager'
-import ReCaptcha from '../components/ ReCaptcha.vue'
+import ReCaptcha from '../components/ReCaptcha.vue' // Corregido espacio en la ruta
 
 const router = useRouter()
+const config = useRuntimeConfig()
 
 const isRegister = ref(false)
 
@@ -171,27 +174,29 @@ async function loginUser() {
   loginError.value = ''
   loginCaptchaError.value = ''
 
-  // Validar ReCaptcha
   if (!loginRecaptchaToken.value) {
     loginCaptchaError.value = 'Si us plau, completa el ReCAPTCHA'
     return
   }
 
-  const loginData = {
-    ...loginForm.value,
-    recaptchaToken: loginRecaptchaToken.value
-  }
+  try {
+    const result = await CommunicationManager.login({
+      ...loginForm.value,
+      recaptchaToken: loginRecaptchaToken.value
+    })
 
-  const result = await CommunicationManager.login(loginData)
-  if (result.error) {
-    loginError.value = result.error
-    loginRecaptchaRef.value?.reset()
-    loginRecaptchaToken.value = ''
-  } else {
-    token.value = result.token
-    user.value = result.user
-    console.log('Sessió iniciada correctament', result)
-    router.push('/')
+    if (result.error) {
+      loginError.value = result.error
+      loginRecaptchaRef.value?.reset()
+      loginRecaptchaToken.value = ''
+    } else {
+      token.value = result.token
+      user.value = result.user
+      router.push('/')
+    }
+  } catch (error) {
+    loginError.value = 'Error en la connexió amb el servidor'
+    console.error('Login error:', error)
   }
 }
 
@@ -199,37 +204,43 @@ async function registerUser() {
   registerError.value = ''
   registerCaptchaError.value = ''
 
-  // Validar ReCaptcha
   if (!registerRecaptchaToken.value) {
     registerCaptchaError.value = 'Si us plau, completa el ReCAPTCHA'
     return
   }
 
-  const registerData = {
-    ...registerForm.value,
-    recaptchaToken: registerRecaptchaToken.value
-  }
+  try {
+    const result = await CommunicationManager.register({
+      ...registerForm.value,
+      recaptchaToken: registerRecaptchaToken.value
+    })
 
-  const result = await CommunicationManager.register(registerData)
-  if (result.error) {
-    registerError.value = result.error
-    registerRecaptchaRef.value?.reset()
-    registerRecaptchaToken.value = ''
-  } else {
-    token.value = result.token
-    user.value = result.user
-    console.log('Registre realitzat correctament', result)
-    router.push('/')
+    if (result.error) {
+      registerError.value = result.error
+      registerRecaptchaRef.value?.reset()
+      registerRecaptchaToken.value = ''
+    } else {
+      token.value = result.token
+      user.value = result.user
+      router.push('/')
+    }
+  } catch (error) {
+    registerError.value = 'Error en la connexió amb el servidor'
+    console.error('Register error:', error)
   }
 }
 
-function toggleForm() {
+async function toggleForm() {
   isRegister.value = !isRegister.value
-  // Resetegem els ReCaptcha en canviar de formulari
-  loginRecaptchaRef.value?.reset()
-  registerRecaptchaRef.value?.reset()
-  loginRecaptchaToken.value = ''
-  registerRecaptchaToken.value = ''
+  await nextTick()
+  
+  if (!isRegister.value && loginRecaptchaRef.value) {
+    await loginRecaptchaRef.value.initializeRecaptcha()
+  }
+  
+  if (isRegister.value && registerRecaptchaRef.value) {
+    await registerRecaptchaRef.value.initializeRecaptcha()
+  }
 }
 </script>
 

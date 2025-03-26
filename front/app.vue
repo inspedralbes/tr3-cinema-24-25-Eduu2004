@@ -3,13 +3,13 @@
     <header>
       <nav>
         <div class="nav-left">
-          <NuxtLink to="/" class="nav-link">Inicio</NuxtLink>
-          <NuxtLink to="/sessions" class="nav-link">Ver Sesiones</NuxtLink>
-          <NuxtLink to="/tickets" class="nav-link">Entradas</NuxtLink>
+          <NuxtLink to="/" class="nav-link">Inici</NuxtLink>
+          <NuxtLink to="/sessions" class="nav-link">Veure Sessions</NuxtLink>
+          <NuxtLink to="/tickets" class="nav-link">Consulta d'Entrades</NuxtLink>
         </div>
         <div class="nav-right">
           <template v-if="!token">
-            <NuxtLink to="/auth" class="nav-link auth">Login / Registro</NuxtLink>
+            <NuxtLink to="/auth" class="nav-link auth">Login / Registre</NuxtLink>
           </template>
           <template v-else>
             <button @click="logout" class="logout-btn">Logout</button>
@@ -21,7 +21,7 @@
       <NuxtPage />
     </main>
     <footer>
-      <p>&copy; 2025 Cinema App. Todos los derechos reservados.</p>
+      <p>&copy; 2025 Cinema. Drets reservats.</p>
     </footer>
   </div>
 </template>

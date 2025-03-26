@@ -94,7 +94,7 @@ const renderWidget = async () => {
     console.error('Error renderitzant reCAPTCHA:', e)
     error.value = 'Error inicialitzant reCAPTCHA'
     loading.value = false
-    setTimeout(() => renderWidget(), 500) // Reintentar después de 500ms
+    setTimeout(() => renderWidget(), 500)
   }
 }
 

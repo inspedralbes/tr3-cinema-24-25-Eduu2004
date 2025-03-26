@@ -12,7 +12,6 @@ use GuzzleHttp\Exception\RequestException;
 
 class AuthController extends Controller
 {
-    // Registro de usuario
     public function register(Request $request)
     {
         try {
@@ -25,7 +24,6 @@ class AuthController extends Controller
                 'recaptcha_token' => 'required'
             ]);
 
-            // Validar reCAPTCHA
             $recaptchaResponse = $this->validateRecaptcha($validated['recaptcha_token'], $request->ip());
             if (!$recaptchaResponse['success']) {
                 Log::warning('reCAPTCHA validation failed', [
@@ -66,7 +64,6 @@ class AuthController extends Controller
         }
     }
 
-    // Login de usuario
     public function login(Request $request)
     {
         try {
@@ -76,7 +73,6 @@ class AuthController extends Controller
                 'recaptcha_token' => 'required'
             ]);
 
-            // Validar reCAPTCHA
             $recaptchaResponse = $this->validateRecaptcha($request->recaptcha_token, $request->ip());
             if (!$recaptchaResponse['success']) {
                 Log::warning('reCAPTCHA validation failed on login', [
@@ -126,18 +122,16 @@ class AuthController extends Controller
                     'response' => $token,
                     'remoteip' => $remoteIp
                 ],
-                'timeout' => 5 // Tiempo máximo de espera en segundos
+                'timeout' => 5 ,
             ]);
 
             $responseData = json_decode((string)$response->getBody(), true);
 
-            // Validación adicional para desarrollo local
             if (app()->environment('local')) {
                 $responseData['success'] = true;
                 $responseData['hostname'] = 'localhost';
             }
 
-            // Verificar hostname en producción
             if (app()->environment('production') && $responseData['hostname'] !== parse_url(config('app.url'), PHP_URL_HOST)) {
                 $responseData['success'] = false;
                 $responseData['error-codes'] = ['invalid-hostname'];

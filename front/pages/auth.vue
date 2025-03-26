@@ -19,7 +19,6 @@
                     Crea un compte nou
                   </h5><br><br>
 
-                  <!-- Formulari d'inici de sessió -->
                   <form v-if="!isRegister" @submit.prevent="loginUser">
                     <div class="form-outline mb-4">
                       <input type="email" class="form-control form-control-lg" v-model="loginForm.email" required />
@@ -27,17 +26,13 @@
                     </div>
 
                     <div class="form-outline mb-4">
-                      <input type="password" class="form-control form-control-lg" v-model="loginForm.password" required />
+                      <input type="password" class="form-control form-control-lg" v-model="loginForm.password"
+                        required />
                       <label class="form-label">Contrasenya</label>
                     </div>
 
-                    <!-- ReCAPTCHA -->
-                    <ReCaptcha 
-                      v-if="!isRegister"
-                      ref="loginRecaptchaRef"
-                      v-model="loginRecaptchaToken"
-                      :sitekey="config.public.RECAPTCHA_SITE_KEY"
-                    />
+                    <ReCaptcha v-if="!isRegister" ref="loginRecaptchaRef" v-model="loginRecaptchaToken"
+                      :sitekey="config.public.RECAPTCHA_SITE_KEY" />
                     <div v-if="loginCaptchaError" class="text-danger mb-4">{{ loginCaptchaError }}</div>
 
                     <div class="pt-1 mb-4">
@@ -52,14 +47,14 @@
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
 
-                  <!-- Formulari de registre -->
                   <form v-else @submit.prevent="registerUser">
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.name" required />
                       <label class="form-label">Nom</label>
                     </div>
                     <div class="form-outline mb-4">
-                      <input type="text" class="form-control form-control-lg" v-model="registerForm.lastname" required />
+                      <input type="text" class="form-control form-control-lg" v-model="registerForm.lastname"
+                        required />
                       <label class="form-label">Cognom</label>
                     </div>
                     <div class="form-outline mb-4">
@@ -67,11 +62,13 @@
                       <label class="form-label">Correu electrònic</label>
                     </div>
                     <div class="form-outline mb-4">
-                      <input type="password" class="form-control form-control-lg" v-model="registerForm.password" required />
+                      <input type="password" class="form-control form-control-lg" v-model="registerForm.password"
+                        required />
                       <label class="form-label">Contrasenya</label>
                     </div>
                     <div class="form-outline mb-4">
-                      <input type="password" class="form-control form-control-lg" v-model="registerForm.password_confirmation" required />
+                      <input type="password" class="form-control form-control-lg"
+                        v-model="registerForm.password_confirmation" required />
                       <label class="form-label">Confirma la contrasenya</label>
                     </div>
                     <div class="form-outline mb-4">
@@ -79,13 +76,8 @@
                       <label class="form-label">Telèfon</label>
                     </div>
 
-                    <!-- ReCAPTCHA -->
-                    <ReCaptcha
-                      v-if="isRegister"
-                      ref="registerRecaptchaRef"
-                      v-model="registerRecaptchaToken"
-                      :sitekey="config.public.RECAPTCHA_SITE_KEY"
-                    />
+                    <ReCaptcha v-if="isRegister" ref="registerRecaptchaRef" v-model="registerRecaptchaToken"
+                      :sitekey="config.public.RECAPTCHA_SITE_KEY" />
                     <div v-if="registerCaptchaError" class="text-danger mb-4">{{ registerCaptchaError }}</div>
 
                     <div class="pt-1 mb-4">
@@ -125,10 +117,8 @@ import ReCaptcha from '../components/ReCaptcha.vue'
 const router = useRouter()
 const config = useRuntimeConfig()
 
-// States
 const isRegister = ref(false)
 
-// Formularios
 const loginForm = ref({
   email: '',
   password: ''
@@ -143,25 +133,20 @@ const registerForm = ref({
   phone: ''
 })
 
-// Refs para ReCaptcha
 const loginRecaptchaRef = ref(null)
 const registerRecaptchaRef = ref(null)
 
-// Variables para los errores
 const loginRecaptchaToken = ref('')
 const registerRecaptchaToken = ref('')
 const loginCaptchaError = ref('')
 const registerCaptchaError = ref('')
 
-// Errores de login y registro
 const loginError = ref('')
 const registerError = ref('')
 
-// Global state for user and token
 const token = useState('token', () => null)
 const user = useState('user', () => null)
 
-// Recuperar datos del localStorage al montar el componente
 onMounted(() => {
   const storedToken = localStorage.getItem('access_token')
   const storedUser = localStorage.getItem('user')
@@ -197,15 +182,12 @@ async function loginUser() {
       const { access_token, user } = result.data
 
       if (access_token && user) {
-        // Guardamos en localStorage
         localStorage.setItem('access_token', access_token)
         localStorage.setItem('user', JSON.stringify(user))
 
-        // Actualizamos el estado global (token y user)
         token.value = access_token
         user.value = user
 
-        // Redirigimos al usuario
         router.push('/')
       } else {
         loginError.value = 'Error: La respuesta no contiene información de usuario.'

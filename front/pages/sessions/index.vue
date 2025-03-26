@@ -47,13 +47,13 @@ function formatDate(dateString) {
   margin: 0 auto;
   padding: 40px 20px;
   font-family: 'Roboto', sans-serif;
-  background-color: #fff; /* Fons blanc */
+  background-color: #fff; 
 }
 
 .sessions-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #222; /* Títol en negre */
+  color: #222; 
   margin-bottom: 30px;
   text-align: center;
   text-transform: uppercase;
@@ -129,7 +129,6 @@ function formatDate(dateString) {
   text-decoration: none;
 }
 
-/* Adaptacions responsives */
 @media (max-width: 1200px) {
   .sessions-grid {
     grid-template-columns: repeat(3, 1fr); 

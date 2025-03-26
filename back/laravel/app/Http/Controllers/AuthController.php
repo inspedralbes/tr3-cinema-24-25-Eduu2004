@@ -6,65 +6,148 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class AuthController extends Controller
 {
     // Registro de usuario
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'lastname'  => 'required|string|max:255',
-            'email'     => 'required|string|email|max:255|unique:users',
-            'password'  => 'required|string|min:6|confirmed',
-            'phone'     => 'nullable|string'
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'lastname' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'phone' => 'nullable|string',
+                'recaptcha_token' => 'required'
+            ]);
 
-        $user = User::create([
-            'name'      => $validated['name'],
-            'lastname'  => $validated['lastname'],
-            'email'     => $validated['email'],
-            'password'  => Hash::make($validated['password']),
-            'phone'     => $validated['phone'] ?? null,
-        ]);
+            // Validar reCAPTCHA
+            $recaptchaResponse = $this->validateRecaptcha($validated['recaptcha_token'], $request->ip());
+            if (!$recaptchaResponse['success']) {
+                Log::warning('reCAPTCHA validation failed', [
+                    'errors' => $recaptchaResponse['error-codes'] ?? [],
+                    'ip' => $request->ip()
+                ]);
+                
+                return response()->json([
+                    'message' => 'Verificación de seguridad fallida',
+                    'errors' => ['recaptcha' => 'Error en la verificación de seguridad']
+                ], 422);
+            }
 
-        // Genera el token de acceso
-        $token = $user->createToken('auth_token')->plainTextToken;
+            $user = User::create([
+                'name' => $validated['name'],
+                'lastname' => $validated['lastname'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'phone' => $validated['phone'] ?? null,
+            ]);
 
-        return response()->json([
-            'message' => 'User registered successfully',
-            'data' => [
-                'user' => $user,
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ]
-        ], 201);
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Registro exitoso',
+                'data' => [
+                    'user' => $user->makeHidden(['password']),
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                ]
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        }
     }
 
     // Login de usuario
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required'
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|email',
+                'password' => 'required',
+                'recaptcha_token' => 'required'
+            ]);
 
-        if (!Auth::attempt($credentials)) {
+            // Validar reCAPTCHA
+            $recaptchaResponse = $this->validateRecaptcha($request->recaptcha_token, $request->ip());
+            if (!$recaptchaResponse['success']) {
+                Log::warning('reCAPTCHA validation failed on login', [
+                    'errors' => $recaptchaResponse['error-codes'] ?? [],
+                    'ip' => $request->ip()
+                ]);
+                
+                return response()->json([
+                    'message' => 'Verificación de seguridad fallida',
+                    'errors' => ['recaptcha' => 'Error en la verificación de seguridad']
+                ], 422);
+            }
+
+            if (!Auth::attempt($request->only('email', 'password'))) {
+                return response()->json([
+                    'message' => 'Credenciales inválidas'
+                ], 401);
+            }
+
+            $user = User::where('email', $request->email)->firstOrFail();
+            $token = $user->createToken('auth_token')->plainTextToken;
+
             return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
+                'message' => 'Inicio de sesión exitoso',
+                'data' => [
+                    'user' => $user->makeHidden(['password']),
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         }
+    }
 
-        $user = User::where('email', $credentials['email'])->firstOrFail();
-        $token = $user->createToken('auth_token')->plainTextToken;
+    private function validateRecaptcha($token, $remoteIp)
+    {
+        try {
+            $client = new Client();
+            $response = $client->post('https://www.google.com/recaptcha/api/siteverify', [
+                'form_params' => [
+                    'secret' => config('services.recaptcha.secret'),
+                    'response' => $token,
+                    'remoteip' => $remoteIp
+                ],
+                'timeout' => 5 // Tiempo máximo de espera en segundos
+            ]);
 
-        return response()->json([
-            'message' => 'Login successful',
-            'data' => [
-                'user' => $user,
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ]
-        ]);
+            $responseData = json_decode((string)$response->getBody(), true);
+
+            // Validación adicional para desarrollo local
+            if (app()->environment('local')) {
+                $responseData['success'] = true;
+                $responseData['hostname'] = 'localhost';
+            }
+
+            // Verificar hostname en producción
+            if (app()->environment('production') && $responseData['hostname'] !== parse_url(config('app.url'), PHP_URL_HOST)) {
+                $responseData['success'] = false;
+                $responseData['error-codes'] = ['invalid-hostname'];
+            }
+
+            return $responseData;
+
+        } catch (RequestException $e) {
+            Log::error('Error al verificar reCAPTCHA: ' . $e->getMessage());
+            return ['success' => false, 'error-codes' => ['connection-failed']];
+        }
     }
 }

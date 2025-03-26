@@ -28,57 +28,73 @@ async function fetchSessions() {
   }
 }
 
-async function login(loginForm, router) {
+async function login(data) {
   try {
-    const res = await fetch(`${LARAVEL_URL}auth/login`, {
+    const response = await fetch(`${LARAVEL_URL}auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(loginForm)
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        recaptcha_token: data.recaptchaToken
+      })
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.message || 'Error en iniciar sessió' };
+
+    const textResponse = await response.text();
+    const result = textResponse ? JSON.parse(textResponse) : {};
+
+    if (!response.ok) {
+      return {
+        error: result.message || 'Error en el login',
+        status: response.status
+      };
     }
-    localStorage.setItem('access_token', data.data.access_token);
-    localStorage.setItem('user', JSON.stringify(data.data.user));
-    router.push('/');
-    return {
-      token: data.data.access_token,
-      user: data.data.user
-    };
-  } catch (err) {
-    console.error(err);
-    return { error: "S'ha produït un error" };
+
+    return result;
+
+  } catch (error) {
+    console.error('Login error:', error);
+    return { error: 'Error de conexión: ' + error.message };
   }
 }
 
-async function register(registerForm, router) {
+async function register(data) {
   try {
-    const res = await fetch(`${LARAVEL_URL}auth/register`, {
+    const response = await fetch(`${LARAVEL_URL}auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(registerForm)
+      body: JSON.stringify({
+        name: data.name,
+        lastname: data.lastname,
+        email: data.email,
+        password: data.password,
+        password_confirmation: data.password_confirmation,
+        phone: data.phone,
+        recaptcha_token: data.recaptchaToken
+      })
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.message || 'Error en registrar-se' };
+
+    const textResponse = await response.text();
+    const result = textResponse ? JSON.parse(textResponse) : {};
+
+    if (!response.ok) {
+      return {
+        error: result.message || 'Error en el registro',
+        status: response.status
+      };
     }
-    localStorage.setItem('access_token', data.data.access_token);
-    localStorage.setItem('user', JSON.stringify(data.data.user));
-    router.push('/');
-    return {
-      token: data.data.access_token,
-      user: data.data.user
-    };
-  } catch (err) {
-    console.error(err);
-    return { error: "S'ha produït un error" };
+
+    return result;
+
+  } catch (error) {
+    console.error('Register error:', error);
+    return { error: 'Error de conexión: ' + error.message };
   }
 }
 
@@ -142,8 +158,8 @@ async function purchaseTickets(purchaseData) {
   try {
     const res = await fetch(`${LARAVEL_URL}tickets/purchase`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
+      headers: {
+        'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify(purchaseData)
@@ -159,13 +175,11 @@ async function purchaseTickets(purchaseData) {
   }
 }
 
-const goToSession = () => {
-  if (sessionId.value) {
-    router.push(`/sessions/${sessionId.value}`);
+const goToSession = (router, sessionId) => {
+  if (sessionId) {
+    router.push(`/sessions/${sessionId}`);
   }
 }
-
-
 
 export default {
   fetchMovies,

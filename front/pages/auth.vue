@@ -20,7 +20,7 @@
                     Crea un compte nou
                   </h5><br><br>
 
-                  <!-- Utilitzem loginUser per al formulari d'inici de sessió -->
+                  <!-- Formulari d'inici de sessió -->
                   <form v-if="!isRegister" @submit.prevent="loginUser">
                     <div class="form-outline mb-4">
                       <input type="email" class="form-control form-control-lg" v-model="loginForm.email" required />
@@ -31,6 +31,14 @@
                       <input type="password" class="form-control form-control-lg" v-model="loginForm.password" required />
                       <label class="form-label">Contrasenya</label>
                     </div>
+
+                    <!-- ReCAPTCHA -->
+                    <ReCaptcha 
+                      ref="loginRecaptchaRef"
+                      v-model="loginRecaptchaToken"
+                      sitekey="6Lf71wArAAAAACMOAohcU-AaUYcDu799qAlHnNUo"
+                    />
+                    <div v-if="loginCaptchaError" class="text-danger mb-4">{{ loginCaptchaError }}</div>
 
                     <div class="pt-1 mb-4">
                       <button class="btn btn-dark btn-lg btn-block" type="submit">
@@ -46,7 +54,7 @@
                     <div v-if="loginError" class="text-danger mt-2">{{ loginError }}</div>
                   </form>
 
-                  <!-- Utilitzem registerUser per al formulari de registre -->
+                  <!-- Formulari de registre -->
                   <form v-else @submit.prevent="registerUser">
                     <div class="form-outline mb-4">
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.name" required />
@@ -77,6 +85,14 @@
                       <input type="text" class="form-control form-control-lg" v-model="registerForm.phone" />
                       <label class="form-label">Telèfon</label>
                     </div>
+
+                    <!-- ReCAPTCHA -->
+                    <ReCaptcha
+                      ref="registerRecaptchaRef"
+                      v-model="registerRecaptchaToken"
+                      sitekey="6Lf71wArAAAAACMOAohcU-AaUYcDu799qAlHnNUo"
+                    />
+                    <div v-if="registerCaptchaError" class="text-danger mb-4">{{ registerCaptchaError }}</div>
 
                     <div class="pt-1 mb-4">
                       <button class="btn btn-dark btn-lg btn-block" type="submit">
@@ -112,11 +128,13 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useState } from '#app'
 import CommunicationManager from '@/stores/communicationManager'
+import ReCaptcha from '../components/ ReCaptcha.vue'
 
 const router = useRouter()
 
 const isRegister = ref(false)
 
+// Formularis
 const loginForm = ref({
   email: '',
   password: ''
@@ -131,38 +149,87 @@ const registerForm = ref({
   phone: ''
 })
 
+// Refs pels ReCaptcha
+const loginRecaptchaRef = ref(null)
+const registerRecaptchaRef = ref(null)
+
+// Variables pels tokens d'error
+const loginRecaptchaToken = ref('')
+const registerRecaptchaToken = ref('')
+const loginCaptchaError = ref('')
+const registerCaptchaError = ref('')
+
+// Errors
 const loginError = ref('')
 const registerError = ref('')
 
+// Estat global
 const token = useState('token', () => null)
 const user = useState('user', () => null)
 
 async function loginUser() {
   loginError.value = ''
-  const result = await CommunicationManager.login(loginForm.value, router)
+  loginCaptchaError.value = ''
+
+  // Validar ReCaptcha
+  if (!loginRecaptchaToken.value) {
+    loginCaptchaError.value = 'Si us plau, completa el ReCAPTCHA'
+    return
+  }
+
+  const loginData = {
+    ...loginForm.value,
+    recaptchaToken: loginRecaptchaToken.value
+  }
+
+  const result = await CommunicationManager.login(loginData)
   if (result.error) {
     loginError.value = result.error
+    loginRecaptchaRef.value?.reset()
+    loginRecaptchaToken.value = ''
   } else {
     token.value = result.token
     user.value = result.user
     console.log('Sessió iniciada correctament', result)
+    router.push('/')
   }
 }
 
 async function registerUser() {
   registerError.value = ''
-  const result = await CommunicationManager.register(registerForm.value, router)
+  registerCaptchaError.value = ''
+
+  // Validar ReCaptcha
+  if (!registerRecaptchaToken.value) {
+    registerCaptchaError.value = 'Si us plau, completa el ReCAPTCHA'
+    return
+  }
+
+  const registerData = {
+    ...registerForm.value,
+    recaptchaToken: registerRecaptchaToken.value
+  }
+
+  const result = await CommunicationManager.register(registerData)
   if (result.error) {
     registerError.value = result.error
+    registerRecaptchaRef.value?.reset()
+    registerRecaptchaToken.value = ''
   } else {
     token.value = result.token
     user.value = result.user
     console.log('Registre realitzat correctament', result)
+    router.push('/')
   }
 }
 
 function toggleForm() {
   isRegister.value = !isRegister.value
+  // Resetegem els ReCaptcha en canviar de formulari
+  loginRecaptchaRef.value?.reset()
+  registerRecaptchaRef.value?.reset()
+  loginRecaptchaToken.value = ''
+  registerRecaptchaToken.value = ''
 }
 </script>
 

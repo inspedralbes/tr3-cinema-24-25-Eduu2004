@@ -74,9 +74,11 @@
           </li>
         </ul>
       </div>
-
-
     </div>
+  </div>
+
+  <div v-if="isLoading" class="loading-overlay">
+    <img src="../assests/loading.gif" alt="Càrregant..." class="loading-gif" />
   </div>
 </template>
 
@@ -85,6 +87,7 @@ import { ref, computed, onMounted } from 'vue'
 import CommunicationManager from '@/stores/communicationManager'
 
 const isDiscountDay = ref(false)
+const isLoading = ref(false);
 const props = defineProps({
   sessionId: {
     type: String,
@@ -158,22 +161,28 @@ function toggleSeatSelection(seat) {
   }
 }
 async function confirmPurchase() {
+  isLoading.value = true;
+
   if (selectedSeats.value.length === 0) {
     showErrorMessage('Selecciona almenys una butaca.')
+    isLoading.value = false; 
     return
   }
   if (!userData.value.name || !userData.value.surname || !userData.value.phone || !userData.value.email) {
     showErrorMessage('Si us plau, omple totes les dades personals.')
+    isLoading.value = false;
     return
   }
   const ticketsResult = await CommunicationManager.getTickets(userData.value.email)
   if (ticketsResult.error) {
     showErrorMessage(ticketsResult.error)
+    isLoading.value = false; 
     return
   }
   const existingTickets = ticketsResult.tickets.filter(ticket => String(ticket.session_id) === String(props.sessionId))
   if (existingTickets.length > 0) {
-    showErrorMessage('Ja tens entrades per aquesta sessió.')
+    showErrorMessage('Aquest correu ja té entrades per a aquesta sessió.')
+    isLoading.value = false; 
     return
   }
   try {
@@ -186,6 +195,7 @@ async function confirmPurchase() {
     const result = await CommunicationManager.purchaseTickets(purchaseData)
     if (result.error) {
       showErrorMessage(result.error)
+      isLoading.value = false; 
       return
     }
     showSuccessMessage('Entrades comprades correctament! Rebràs el tiquet per correu.')
@@ -195,8 +205,10 @@ async function confirmPurchase() {
       })
     })
     selectedSeats.value = []
+    isLoading.value = false;
   } catch (err) {
     showErrorMessage('S\'ha produït un error')
+    isLoading.value = false;
     console.error(err)
   }
 }
@@ -219,7 +231,6 @@ function seatPrice(seat) {
     return seat.row === 'F' ? 8 : 6;
   }
 }
-
 </script>
 
 <style scoped>
@@ -258,6 +269,24 @@ function seatPrice(seat) {
   font-weight: bold;
   color: #007bff;
   text-align: right;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; 
+}
+
+.loading-gif {
+  width: 50px; 
+  height: auto;
 }
 
 .cinema {

@@ -1,4 +1,4 @@
-const LARAVEL_URL = 'http://localhost:8000/api/';
+const LARAVEL_URL = 'http://a20edurenlopcinemaback.daw.inspedralbes.cat/api/';
 
 async function fetchMovies() {
   try {

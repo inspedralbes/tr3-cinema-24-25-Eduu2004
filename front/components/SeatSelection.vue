@@ -505,4 +505,56 @@ p.text span {
   text-align: center;
   color: #333;
 }
+
+@media (max-width: 768px) {
+  .cinema {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .left-panel, .right-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .pati {
+    width: 100%;
+  }
+
+  .row-label {
+    width: 15px;
+    font-size: 0.9rem;
+  }
+
+  .row-seats {
+    gap: 5px;
+  }
+
+  .seat {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .input-field {
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+  .purchase-summary, .seat-selection {
+    font-size: 1.1rem;
+  }
+}
 </style>

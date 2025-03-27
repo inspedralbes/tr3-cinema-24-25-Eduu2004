@@ -160,4 +160,32 @@ function formatDate(dateString) {
   color: #666;
   line-height: 1.5;
 }
+
+@media (max-width: 1024px) {
+  .sessions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sessions-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2rem;
+  }
+
+  .btn-buy-ticket {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
 </style>

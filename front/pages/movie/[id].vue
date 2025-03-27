@@ -176,4 +176,61 @@ const goToSession = () => {
   font-size: 1.2rem;
   color: #e50914;
 }
+@media (max-width: 768px) {
+  .movie-container {
+    padding: 20px;
+  }
+
+  .movie-details {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .poster-container {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .movie-poster {
+    max-width: 80%;
+    height: auto;
+  }
+
+  .info-container {
+    gap: 15px;
+  }
+
+  .title {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .plot {
+    font-size: 1rem;
+    text-align: justify;
+  }
+
+  .movie-meta {
+    align-items: center;
+  }
+
+  .movie-meta p {
+    text-align: center;
+  }
+
+  .btn-buy-ticket {
+    width: 100%;
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 14px;
+  }
+
+  .no-session-msg {
+    font-size: 1rem;
+    text-align: center;
+    padding: 12px;
+  }
+}
+
 </style>

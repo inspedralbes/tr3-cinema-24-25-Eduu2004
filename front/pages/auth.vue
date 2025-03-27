@@ -272,4 +272,62 @@ async function toggleForm() {
 .text-danger {
   color: red;
 }
+
+@media (max-width: 768px) {
+  .vh-100 {
+    height: auto;
+    min-height: 100vh;
+    padding: 20px 0;
+  }
+
+  .container {
+    padding: 20px;
+  }
+
+  .card {
+    border-radius: 0.5rem;
+    box-shadow: none;
+  }
+
+  .row.g-0 {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .col-md-6.col-lg-5 {
+    display: none;
+  }
+
+  .col-md-6.col-lg-7 {
+    width: 100%;
+  }
+
+  .card-body {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .h1 {
+    font-size: 1.8rem;
+  }
+
+  .form-outline {
+    text-align: left;
+  }
+
+  .form-control {
+    font-size: 1rem;
+    padding: 10px;
+  }
+
+  .btn-lg {
+    font-size: 1rem;
+    padding: 12px;
+    width: 100%;
+  }
+
+  p {
+    font-size: 0.9rem;
+  }
+}
 </style>

@@ -77,6 +77,7 @@ header {
 nav {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .nav-left {
@@ -85,7 +86,6 @@ nav {
 }
 
 .nav-right {
-  margin-left: auto;
   display: flex;
   gap: 2rem;
 }
@@ -145,5 +145,23 @@ footer {
   padding: 1rem 2rem;
   font-size: 0.875rem;
   color: #bbb;
+}
+
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nav-left, .nav-right {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.75rem;
+  }
 }
 </style>

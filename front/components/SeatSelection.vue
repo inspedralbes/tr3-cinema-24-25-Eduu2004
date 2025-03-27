@@ -165,7 +165,7 @@ async function confirmPurchase() {
 
   if (selectedSeats.value.length === 0) {
     showErrorMessage('Selecciona almenys una butaca.')
-    isLoading.value = false; 
+    isLoading.value = false;
     return
   }
   if (!userData.value.name || !userData.value.surname || !userData.value.phone || !userData.value.email) {
@@ -176,13 +176,13 @@ async function confirmPurchase() {
   const ticketsResult = await CommunicationManager.getTickets(userData.value.email)
   if (ticketsResult.error) {
     showErrorMessage(ticketsResult.error)
-    isLoading.value = false; 
+    isLoading.value = false;
     return
   }
   const existingTickets = ticketsResult.tickets.filter(ticket => String(ticket.session_id) === String(props.sessionId))
   if (existingTickets.length > 0) {
     showErrorMessage('Aquest correu ja té entrades per a aquesta sessió.')
-    isLoading.value = false; 
+    isLoading.value = false;
     return
   }
   try {
@@ -195,7 +195,7 @@ async function confirmPurchase() {
     const result = await CommunicationManager.purchaseTickets(purchaseData)
     if (result.error) {
       showErrorMessage(result.error)
-      isLoading.value = false; 
+      isLoading.value = false;
       return
     }
     showSuccessMessage('Entrades comprades correctament! Rebràs el tiquet per correu.')
@@ -277,15 +277,15 @@ function seatPrice(seat) {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); 
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; 
+  z-index: 9999;
 }
 
 .loading-gif {
-  width: 50px; 
+  width: 50px;
   height: auto;
 }
 

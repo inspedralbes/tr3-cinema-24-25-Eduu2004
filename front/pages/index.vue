@@ -5,12 +5,7 @@
     </div>
 
     <div class="search-container">
-      <input 
-        v-model="searchQuery" 
-        type="text" 
-        placeholder="Buscar pel·lícula..." 
-        class="search-bar"
-      />
+      <input v-model="searchQuery" type="text" placeholder="Buscar pel·lícula..." class="search-bar" />
       <span class="search-icon">🔍</span>
     </div>
 
@@ -20,11 +15,8 @@
       <div v-for="(movie, index) in filteredMovies" :key="movie.id" class="movie-card">
         <NuxtLink :to="`/movie/${movie.id}`" class="movie-link">
           <div class="poster-container">
-            <img 
-              :src="movie.poster ? movie.poster : '/placeholder.jpg'" 
-              alt="Poster de la pel·lícula" 
-              class="movie-poster" 
-            />
+            <img :src="movie.poster ? movie.poster : '/placeholder.jpg'" alt="Poster de la pel·lícula"
+              class="movie-poster" />
             <div class="overlay">
               <button class="btn-buy-ticket">Comprar Entrada</button>
             </div>
@@ -51,7 +43,7 @@ onMounted(async () => {
 })
 
 const filteredMovies = computed(() => {
-  return movies.value.filter(movie => 
+  return movies.value.filter(movie =>
     movie.title.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })

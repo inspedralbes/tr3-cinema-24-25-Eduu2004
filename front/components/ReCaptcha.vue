@@ -75,7 +75,7 @@ const renderWidget = async () => {
     }
 
     await nextTick()
-    
+
     widgetId.value = window.grecaptcha.render(elementId, {
       sitekey: props.sitekey,
       theme: 'light',
@@ -88,7 +88,7 @@ const renderWidget = async () => {
       'expired-callback': () => reset(),
       'error-callback': () => reset()
     })
-    
+
     loading.value = false
   } catch (e) {
     console.error('Error renderitzant reCAPTCHA:', e)
@@ -101,15 +101,15 @@ const renderWidget = async () => {
 const initializeRecaptcha = async () => {
   if (isInitializing.value) return
   isInitializing.value = true
-  
+
   try {
     error.value = ''
     loading.value = true
-    
+
     if (!scriptLoaded.value) {
       await loadScript()
     }
-    
+
     await renderWidget()
   } catch (err) {
     error.value = 'Error carregant reCAPTCHA'

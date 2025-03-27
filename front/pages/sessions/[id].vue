@@ -4,11 +4,8 @@
 
     <!-- Información de la Película -->
     <div class="movie-info">
-      <img 
-        :src="session.movie?.poster || '/placeholder.jpg'" 
-        :alt="session.movie ? session.movie.title : 'Poster no disponible'" 
-        class="poster-image"
-      />
+      <img :src="session.movie?.poster || '/placeholder.jpg'"
+        :alt="session.movie ? session.movie.title : 'Poster no disponible'" class="poster-image" />
       <div class="movie-details">
         <h2>{{ movie.title }}</h2>
         <p><strong>Gènere:</strong> {{ movie.genre }}</p>

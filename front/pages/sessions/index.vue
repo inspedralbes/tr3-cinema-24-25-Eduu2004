@@ -1,20 +1,24 @@
 <template>
   <div class="sessions-container">
-    <h2 class="sessions-title">Pròximes sessions</h2>
+    <h1 class="title">Pròximes sessions</h1>
     <div class="sessions-grid">
       <div v-for="session in sessions" :key="session.id" class="session-card">
-        <div class="session-poster">
-          <img 
-            :src="session.movie?.poster || '/placeholder.jpg'" 
-            :alt="session.movie ? session.movie.title : 'Poster no disponible'" 
-            class="poster-image"
-          />
-        </div>
-        <div class="session-info">
-          <h3 class="movie-title">{{ session.movie ? session.movie.title : 'Película no disponible' }}</h3>
-          <p class="session-time">{{ formatDate(session.date) }} - {{ session.time.slice(0, 5) }}</p>
-          <NuxtLink :to="`/sessions/${session.id}`" class="btn-buy-tickets">Comprar entrades</NuxtLink>
-        </div>
+        <NuxtLink :to="`/sessions/${session.id}`" class="session-link">
+          <div class="poster-container">
+            <img 
+              :src="session.movie?.poster || '/placeholder.jpg'" 
+              :alt="session.movie ? session.movie.title : 'Poster no disponible'" 
+              class="movie-poster"
+            />
+            <div class="overlay">
+              <button class="btn-buy-ticket">Comprar Entrada</button>
+            </div>
+          </div>
+          <div class="session-info">
+            <h3>{{ session.movie ? session.movie.title : 'Película no disponible' }}</h3>
+            <p class="session-time">{{ formatDate(session.date) }} - {{ session.time.slice(0, 5) }}</p>
+          </div>
+        </NuxtLink>
       </div>
     </div>
   </div>
@@ -42,22 +46,23 @@ function formatDate(dateString) {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+
 .sessions-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  background-color: #f9f9f9;
+  color: #333;
   padding: 40px 20px;
+  min-height: 100vh;
   font-family: 'Roboto', sans-serif;
-  background-color: #fff; 
 }
 
-.sessions-title {
-  font-size: 2.5rem;
+.title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 3rem;
   font-weight: 700;
-  color: #222; 
-  margin-bottom: 30px;
   text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  margin-bottom: 40px;
+  color: #000;
 }
 
 .sessions-grid {
@@ -69,7 +74,7 @@ function formatDate(dateString) {
 
 .session-card {
   background-color: #fff;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -77,85 +82,82 @@ function formatDate(dateString) {
 
 .session-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-.session-poster {
+.session-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.poster-container {
+  position: relative;
   width: 100%;
   height: 350px;
   overflow: hidden;
 }
 
-.poster-image {
+.movie-poster {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-bottom: 3px solid #e50914;
+  transition: transform 0.3s ease;
+}
+
+.session-card:hover .movie-poster {
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.session-card:hover .overlay {
+  opacity: 1;
+}
+
+.btn-buy-ticket {
+  padding: 12px 25px;
+  background-color: #e50914;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-family: 'Oswald', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-buy-ticket:hover {
+  background-color: #b00610;
 }
 
 .session-info {
   padding: 20px;
-  text-align: center;
+  text-align: left;
 }
 
-.movie-title {
-  font-size: 1.4rem;
+.session-info h3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #222;
   margin-bottom: 10px;
+  color: #333;
 }
 
 .session-time {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: #666;
-  margin-bottom: 15px;
-}
-
-.btn-buy-tickets {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #e50914;
-  color: #fff;
-  border: none;
-  border-radius: 25px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  text-decoration: none;
-}
-
-.btn-buy-tickets:hover {
-  background-color: #c40812;
-  text-decoration: none;
-}
-
-@media (max-width: 1200px) {
-  .sessions-grid {
-    grid-template-columns: repeat(3, 1fr); 
-  }
-}
-
-@media (max-width: 768px) {
-  .sessions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .sessions-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sessions-title {
-    font-size: 2rem;
-  }
-
-  .session-poster {
-    height: 250px;
-  }
-
-  .movie-title {
-    font-size: 1.2rem;
-  }
+  line-height: 1.5;
 }
 </style>

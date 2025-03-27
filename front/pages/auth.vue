@@ -33,7 +33,7 @@
 
                     <ReCaptcha v-if="!isRegister" ref="loginRecaptchaRef" v-model="loginRecaptchaToken"
                       :sitekey="config.public.RECAPTCHA_SITE_KEY" />
-                    <div v-if="loginCaptchaError" class="text-danger mb-4">{{ loginCaptchaError }}</div>
+                    <div v-if="loginCaptchaError" class="text-danger mb-4">{{ loginCaptchaError }}</div><br>
 
                     <div class="pt-1 mb-4">
                       <button class="btn btn-dark btn-lg btn-block" type="submit">
@@ -78,7 +78,7 @@
 
                     <ReCaptcha v-if="isRegister" ref="registerRecaptchaRef" v-model="registerRecaptchaToken"
                       :sitekey="config.public.RECAPTCHA_SITE_KEY" />
-                    <div v-if="registerCaptchaError" class="text-danger mb-4">{{ registerCaptchaError }}</div>
+                    <div v-if="registerCaptchaError" class="text-danger mb-4">{{ registerCaptchaError }}</div><br>
 
                     <div class="pt-1 mb-4">
                       <button class="btn btn-dark btn-lg btn-block" type="submit">

@@ -11,8 +11,8 @@
         <p class="plot">{{ movie.plot }}</p>
 
         <div class="movie-meta">
-          <p><strong>🎭 Género:</strong> {{ movie.genre }}</p>
-          <p><strong>⏳ Duración:</strong> {{ movie.runtime }} minutos</p>
+          <p><strong>🎭 Gènere:</strong> {{ movie.genre }}</p>
+          <p><strong>⏳ Duració:</strong> {{ movie.runtime }} minuts</p>
         </div>
 
         <button v-if="hasSession" @click="goToSession" class="btn-buy-ticket">
@@ -25,7 +25,7 @@
     </div>
 
     <div v-else class="loading">
-      <p>Cargando película...</p>
+      <p>Carregant pel·lícula...</p>
     </div>
   </div>
 </template>

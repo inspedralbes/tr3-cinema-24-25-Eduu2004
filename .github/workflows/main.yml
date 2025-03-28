@@ -1,0 +1,42 @@
+name: Preparant per produccio
+run-name: ${{ github.actor }} està pujant l'aplicació a PROD 🚀
+
+on: [push]
+
+jobs:
+  Pujar-a-produccio-amb-SCP:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtenint el codi del repositori
+        uses: actions/checkout@v4
+
+      - name: Instal·lar dependències
+        run: |
+          cd front
+          npm install
+
+      - name: Generar el projecte Nuxt
+        run: |
+          cd front
+          npm run build
+
+      - name: Desplegar amb SCP
+        run: |
+          # Guardar la clave privada en el archivo y configurar permisos
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/prod_key.pem
+          chmod 600 /home/runner/prod_key.pem
+          
+          # Crear el directorio remoto en el servidor si no existe
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "/home/runner/prod_key.pem" \
+          ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p /home/runner/tmp/public_html/"
+
+          # Subir los archivos del proyecto al servidor
+          scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "/home/runner/prod_key.pem" \
+          .output/public/* \
+          ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/home/runner/tmp/public_html/
+
+          # Cambiar los permisos de los archivos en el servidor
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "/home/runner/prod_key.pem" \
+          ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "chmod -R 755 /home/runner/tmp/public_html/"
+
+      - run: echo "🍏 Aquest job ha finalitzat amb estat ${{ job.status }}."

@@ -9,23 +9,32 @@ jobs:
     steps:
       - name: Obtenint el codi del repositori
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Asegura que clona todo el historial
+
+      - name: Verificar estructura del repositori
+        run: ls -la  # Muestra los archivos para depuración
 
       - name: Instal·lar dependències
-        run: npm install
+        run: |
+          cd frontend  # Cambia esto si tu código está en una subcarpeta
+          npm install
 
       - name: Compilar el projecte Nuxt
-        run: npm run build
+        run: |
+          cd frontend  # Mismo cambio si está en una subcarpeta
+          npm run build
 
       - name: Desplegar amb SCP
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/prod_key.pem
           chmod 600 ~/prod_key.pem
-          
+
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \
           ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p /home/a20edurenlopcine/web/a20edurenlopcine.daw.inspedralbes.cat/public_html/"
-          
+
           scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \
-          .output/public/* \
+          frontend/.output/public/* \
           ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/home/a20edurenlopcine/web/a20edurenlopcine.daw.inspedralbes.cat/public_html/
 
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \

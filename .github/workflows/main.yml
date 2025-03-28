@@ -22,17 +22,21 @@ jobs:
 
       - name: Desplegar amb SCP
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/prod_key.pem
-          chmod 600 ~/prod_key.pem
+          # Guardar la clave privada en el archivo y configurar permisos
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/prod_key.pem
+          chmod 600 /home/runner/prod_key.pem
           
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \
+          # Crear el directorio remoto en el servidor si no existe
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "/home/runner/prod_key.pem" \
           ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p /home/a20edurenlopcine/web/a20edurenlopcine.daw.inspedralbes.cat/public_html/"
 
-          scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \
+          # Subir los archivos del proyecto al servidor
+          scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "/home/runner/prod_key.pem" \
           .output/public/* \
           ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/home/a20edurenlopcine/web/a20edurenlopcine.daw.inspedralbes.cat/public_html/
 
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \
+          # Cambiar los permisos de los archivos en el servidor
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "/home/runner/prod_key.pem" \
           ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "chmod -R 755 /home/a20edurenlopcine/web/a20edurenlopcine.daw.inspedralbes.cat/public_html/"
 
       - run: echo "🍏 Aquest job ha finalitzat amb estat ${{ job.status }}."

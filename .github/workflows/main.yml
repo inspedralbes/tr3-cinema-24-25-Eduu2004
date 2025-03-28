@@ -16,14 +16,10 @@ jobs:
         run: ls -la  # Muestra los archivos para depuración
 
       - name: Instal·lar dependències
-        run: |
-          cd frontend  # Cambia esto si tu código está en una subcarpeta
-          npm install
+        run: npm install  # Ejecutar en la raíz
 
       - name: Compilar el projecte Nuxt
-        run: |
-          cd frontend  # Mismo cambio si está en una subcarpeta
-          npm run build
+        run: npm run build  # Ejecutar en la raíz
 
       - name: Desplegar amb SCP
         run: |
@@ -34,7 +30,7 @@ jobs:
           ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p /home/a20edurenlopcine/web/a20edurenlopcine.daw.inspedralbes.cat/public_html/"
 
           scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \
-          frontend/.output/public/* \
+          .output/public/* \
           ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/home/a20edurenlopcine/web/a20edurenlopcine.daw.inspedralbes.cat/public_html/
 
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "~/prod_key.pem" \

@@ -11,10 +11,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Instal·lar dependències
-        run: npm install
+        run: |
+          cd front
+          npm install
 
       - name: Generar el projecte Nuxt
-        run: npm run generate  # Genera la versión estática de la web
+        run: |
+          cd front
+          npm run build
 
       - name: Desplegar amb SCP
         run: |

@@ -2,43 +2,60 @@
   <div class="session-page">
     <h1 class="session-title">Compra d'entrades</h1>
 
-    <!-- Información de la Película -->
-    <div class="movie-info">
-      <img :src="session.movie?.poster || '/placeholder.jpg'"
-        :alt="session.movie ? session.movie.title : 'Poster no disponible'" class="poster-image" />
+    <div class="movie-info" v-if="movie && session">
+      <img 
+        :src="session.movie?.poster || '/placeholder.jpg'"
+        :alt="session.movie ? session.movie.title : 'Poster no disponible'" 
+        class="poster-image" 
+      />
       <div class="movie-details">
         <h2>{{ movie.title }}</h2>
         <p><strong>Gènere:</strong> {{ movie.genre }}</p>
         <p><strong>Duració:</strong> {{ movie.runtime }} min</p>
         <p class="plot">{{ movie.plot }}</p>
-        <p><strong>Data d'estrena:</strong> 28 de febrer de 2025</p>
+        <p><strong>Data d'estrena:</strong> {{ session && session.date ? formatDate(session.date) : 'Data no disponible' }}</p>
       </div>
     </div>
+
+    <div v-else class="loading">Carregant sessió...</div>
+
     <SeatSelection :sessionId="route.params.id" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, toRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import SeatSelection from '@/components/SeatSelection.vue'
+import CommunicationManager from '@/stores/communicationManager'; 
+
+const formatDate = (dateString) => {
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-ES', options);
+}
 
 const route = useRoute()
-const movie = ref({})
-const session = ref({})
+const movie = ref(null)
+const session = ref(null)
 
 onMounted(async () => {
   try {
-    const res = await fetch(`http://localhost:8000/api/sessions/${route.params.id}`)
-    if (!res.ok) throw new Error("Error al carregar la sessió")
-    const data = await res.json()
-    session.value = data.data.session
-    movie.value = data.data.movie
+    const sessionId = route.params.id;
+    const result = await CommunicationManager.getSessionDetails(sessionId);
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    session.value = toRaw(result.session);
+    movie.value = result.session.movie;
+
+    console.log('session.value:', session.value); 
   } catch (error) {
-    console.error('Error al carregar la sessió:', error)
+    console.error('Error al cargar la sesión:', error);
   }
-})
+});
 </script>
+
 
 <style scoped>
 .session-page {

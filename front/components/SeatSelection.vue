@@ -24,24 +24,23 @@
         L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).
       </p>
       <div class="pati">
-        <!-- Contenidor principal que envolta tota la secció de les butaques -->
+        <!-- Contenidor principal del pati de butaques -->
         <div class="pati-grid">
           <!-- Bucle que recorre cada fila de butaques -->
           <div class="pati-row" v-for="row in patiRows" :key="row.letter">
-            <!-- Etiqueta de la fila que mostra la lletra de la fila -->
+            <!-- Mostra la lletra de la fila -->
             <div class="row-label">{{ row.letter }}</div>
 
-            <!-- Contenidor que envolta totes les butaques d'aquesta fila -->
             <div class="row-seats">
               <!-- Bucle que recorre cada butaca dins de la fila -->
               <div class="seat" v-for="seat in row.seats" :key="seat.id" :class="{
-                // Si la butaca està ocupada, se li afegeix la classe 'occupied'
+                // Si la butaca està ocupada, se li afegeix la classe 'occupied' i no pots seleccionar més aquesta butaca i la pinta de color vermell
                 occupied: seat.status === 'Ocupada',
 
                 // Si la butaca està seleccionada, se li afegeix la classe 'selected'
                 selected: isSelected(seat),
 
-                // Si la butaca és VIP i està disponible, però no seleccionada, se li afegeix la classe 'vip'
+                // Si la butaca és VIP i està disponible, però no seleccionada, se li afegeix la classe 'vip', en cas de que sigui vip el preu aumenta
                 vip: seat.type === 'VIP' && seat.status === 'Disponible' && !isSelected(seat)
               }" @click="toggleSeatSelection(seat)">
                 <!-- Mostra el número de la butaca -->

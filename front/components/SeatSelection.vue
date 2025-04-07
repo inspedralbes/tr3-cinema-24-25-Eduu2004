@@ -24,21 +24,34 @@
         L'usuari pot seleccionar fins a 10 butaques (màxim per sessió).
       </p>
       <div class="pati">
+        <!-- Contenidor principal que envolta tota la secció de les butaques -->
         <div class="pati-grid">
+          <!-- Bucle que recorre cada fila de butaques -->
           <div class="pati-row" v-for="row in patiRows" :key="row.letter">
+            <!-- Etiqueta de la fila que mostra la lletra de la fila -->
             <div class="row-label">{{ row.letter }}</div>
+
+            <!-- Contenidor que envolta totes les butaques d'aquesta fila -->
             <div class="row-seats">
+              <!-- Bucle que recorre cada butaca dins de la fila -->
               <div class="seat" v-for="seat in row.seats" :key="seat.id" :class="{
+                // Si la butaca està ocupada, se li afegeix la classe 'occupied'
                 occupied: seat.status === 'Ocupada',
+
+                // Si la butaca està seleccionada, se li afegeix la classe 'selected'
                 selected: isSelected(seat),
+
+                // Si la butaca és VIP i està disponible, però no seleccionada, se li afegeix la classe 'vip'
                 vip: seat.type === 'VIP' && seat.status === 'Disponible' && !isSelected(seat)
               }" @click="toggleSeatSelection(seat)">
+                <!-- Mostra el número de la butaca -->
                 {{ seat.number }}
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <p class="seat-selection" style="text-align: center;">
         {{ selectedSeats.length }}/10 butaques seleccionats
       </p>
@@ -514,7 +527,8 @@ p.text span {
     padding: 1rem;
   }
 
-  .left-panel, .right-panel {
+  .left-panel,
+  .right-panel {
     width: 100%;
     max-width: 100%;
   }
@@ -553,7 +567,8 @@ p.text span {
     padding: 12px;
   }
 
-  .purchase-summary, .seat-selection {
+  .purchase-summary,
+  .seat-selection {
     font-size: 1.1rem;
   }
 }

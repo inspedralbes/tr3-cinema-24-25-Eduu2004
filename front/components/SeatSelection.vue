@@ -37,7 +37,7 @@
                 // Si la butaca està ocupada, se li afegeix la classe 'occupied' i no pots seleccionar més aquesta butaca i la pinta de color vermell
                 occupied: seat.status === 'Ocupada',
 
-                // Si la butaca està seleccionada, se li afegeix la classe 'selected'
+                // Si la butaca està seleccionada, se li afegeix la classe 'selected' i les butaques seleccionades es mostraran de color verd
                 selected: isSelected(seat),
 
                 // Si la butaca és VIP i està disponible, però no seleccionada, se li afegeix la classe 'vip', en cas de que sigui vip el preu aumenta
